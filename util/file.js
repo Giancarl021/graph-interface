@@ -3,7 +3,7 @@ const opn = require('open');
 
 module.exports = function (path) {
 
-    const pathToRoot = __dirname.replace(/\\/g, '/') + '/../..';
+    const pathToRoot = __dirname.replace(/\\/g, '/') + '/..';
     const _path = `${pathToRoot}/${path}`;
 
     function save(data) {

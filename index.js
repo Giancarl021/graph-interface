@@ -3,10 +3,10 @@ const createCacheHanlder = require('./util/cache');
 const createHash = require('./util/hash');
 
 module.exports = function (credentials) {
-    const params = requireParams(credentials, ['tenant-id', 'client-id', 'client-secret']);    
+    const params = requireParams(credentials, ['tenant-id', 'client-id', 'client-secret']);
     const { tenantId, clientId, clientSecret } = params;
     const request = createRequestHandler();
-    const cache = createCacheHanlder(`cache/${hash(params)}`);
+    const cache = createCacheHanlder(`cache/${createHash(params)}`);
     
     async function getToken() {
         const getOptions = {
@@ -36,8 +36,7 @@ module.exports = function (credentials) {
     }
 
     return {
-        getToken,
-        getAllUsers
+        getToken
     }
 }
 
@@ -49,11 +48,10 @@ function requireParams(source, params) {
     const r = {};
     for(const param of params) {
         const [a, b] = alias(param);
-        console.log(a,b);
         if(!source[a] && !source[b]) {
             missing.push(a);
         } else {
-            r[a] = source[a] || source[b];
+            r[b] = source[a] || source[b];
         }
     }
 
