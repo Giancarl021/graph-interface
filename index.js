@@ -2,10 +2,11 @@ const createRequestHandler = require('./util/request');
 const createCacheHanlder = require('./util/cache');
 const createHash = require('./util/hash');
 
-module.exports = function (credentials) {
-    const params = requireParams(credentials, ['tenant-id', 'client-id', 'client-secret']);
-    const { tenantId, clientId, clientSecret } = params;
+module.exports = function (credentials, options = { createCache: true }) {
     const request = createRequestHandler();
+
+    const params = request.requireParams(credentials, ['tenant-id', 'client-id', 'client-secret']);
+    const { tenantId, clientId, clientSecret } = params;
     const cache = createCacheHanlder(`cache/${createHash(params)}`);
     
     async function getToken() {
@@ -27,44 +28,48 @@ module.exports = function (credentials) {
             return cache.getCache().access_token;
         } else {
             const response = await request.get(getOptions);
-            if(response.error) {
-                throw new Error(response.error);
+            request.catchResponse(response);
+            if(options.createCache) {
+                cache.setCache(response, response.expires_in * 60000);
             }
-            cache.setCache(response, response.expires_in * 60000);
             return response.access_token;
         }
     }
 
-    return {
-        getToken
+    async function unit(url, options) {
+        const token = await getToken();
     }
-}
 
-function requireParams(source, params) {
-    if(!source || typeof source !== 'object') {
-        throw new Error('Invalid credentials');
-    }
-    const missing = [];
-    const r = {};
-    for(const param of params) {
-        const [a, b] = alias(param);
-        if(!source[a] && !source[b]) {
-            missing.push(a);
+    async function list(url, options = {}) {
+        const token = await getToken();
+        const getOptions = {
+            url,
+            method: options.method || 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        };
+        
+        let response = await request.pagination(getOptions);
+        request.catchResponse(response);
+        if(Array.isArray(response)) {
+            if(options.filter) response = response.filter(options.filter);
+            if(options.map) response = response.map(options.map);
         } else {
-            r[b] = source[a] || source[b];
+            console.warn('Response is not an Array, please verify if you are using the correct request type');
         }
+        return response;
     }
 
-    if(missing.length) {
-        throw new Error(`Missing parameter${missing.length > 1 ? 's' : ''} in credentials object: ${missing.join(', ')}`);
+    async function massive(url, options) {
+        const token = await getToken();
+
     }
 
-    return r;
-
-    function alias(param) {
-        return [
-            param,
-            param.split('-').map((w,i) => i === 0 ? w : w.slice(0,1).toUpperCase() + w.slice(1).toLowerCase()).join('')
-        ]
+    return {
+        getToken,
+        unit,
+        list,
+        massive
     }
 }
