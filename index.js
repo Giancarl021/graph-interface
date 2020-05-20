@@ -1,12 +1,12 @@
 const createRequestHandler = require('./util/request');
 const createCacheHanlder = require('./util/cache');
-const createResponseSaver = require('./util/save');
+const createResponseHandler = require('./util/save');
 const createHash = require('./util/hash');
 const defaultOptions = require('./util/options');
 
 module.exports = function (credentials, mainOptions = defaultOptions.main) {
     const request = createRequestHandler();
-    const responseSaver = createResponseSaver(mainOptions);
+    const responser = createResponseHandler(mainOptions);
     const params = request.requireParams(credentials, ['tenant-id', 'client-id', 'client-secret']);
     const {
         tenantId,
@@ -30,17 +30,15 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             }
         };
 
-        let r;
-
         if (cache.hasCache()) {
-            return responseSaver.save(cache.getCache().access_token, options);
+            return responser.save(cache.getCache().access_token, options);
         } else {
             const response = await request.get(getOptions);
             request.catchResponse(response);
             if (options.createCache || mainOptions.createCache) {
                 cache.setCache(response, response.expires_in * 1000);
             }
-            return responseSaver.save(response.access_token, options);
+            return responser.save(response.access_token, options);
         }
     }
 
@@ -67,7 +65,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             console.warn('[!] Warning: Response is not an Array, please verify if you are using the correct request type');
         }
 
-        return responseSaver.save(response, options);
+        return responser.save(response, options);
     }
 
     async function massive(url, options = defaultOptions.massive) {
