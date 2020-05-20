@@ -1,16 +1,16 @@
 const requestDefault = {
-    saveTo: null,
+    saveOn: null,
     method: 'GET'
 }
 
 module.exports = {
     main: {
         createCache: true,
-        saveTo: null
+        saveOn: null
     },
     getToken: {
         createCache: true,
-        saveTo: null
+        saveOn: null
     },
     unit: {
         ...requestDefault

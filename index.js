@@ -67,11 +67,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             console.warn('[!] Warning: Response is not an Array, please verify if you are using the correct request type');
         }
 
-        if (options.saveTo || mainOptions.saveTo) {
-            request.saveTo(response, options.saveTo || mainOptions.saveTo);
-        }
-
-        return response;
+        return responseSaver.save(response, options);
     }
 
     async function massive(url, options = defaultOptions.massive) {

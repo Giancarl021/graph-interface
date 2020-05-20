@@ -4,7 +4,7 @@ const opn = require('open');
 
 module.exports = function (path) {
     const pathToRoot = process.cwd().replace(/\\/g, '/');
-    const _path = isAbsolute(path) ? path : `${pathToRoot}/${path}`;
+    const _path = isAbsolute(path) ? path.replace(/\\/g, '/') : `${pathToRoot}/${path}`;
 
     function save(data) {
         fs.writeFileSync(_path, data);

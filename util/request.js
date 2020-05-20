@@ -1,6 +1,4 @@
-
 const request = require('request');
-const createJsonHandler = require('./json');
 
 function get(options) {
     return new Promise((resolve, reject) => {
