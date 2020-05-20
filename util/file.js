@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { isAbsolute } = require('path');
+const { isAbsolute, join } = require('path');
 const opn = require('open');
 
 module.exports = function (path) {
