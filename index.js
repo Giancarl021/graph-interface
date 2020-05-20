@@ -1,15 +1,21 @@
 const createRequestHandler = require('./util/request');
 const createCacheHanlder = require('./util/cache');
+const createResponseSaver = require('./util/save');
 const createHash = require('./util/hash');
+const defaultOptions = require('./util/options');
 
-module.exports = function (credentials, options = { createCache: true }) {
+module.exports = function (credentials, mainOptions = defaultOptions.main) {
     const request = createRequestHandler();
-
+    const responseSaver = createResponseSaver(mainOptions);
     const params = request.requireParams(credentials, ['tenant-id', 'client-id', 'client-secret']);
-    const { tenantId, clientId, clientSecret } = params;
+    const {
+        tenantId,
+        clientId,
+        clientSecret
+    } = params;
     const cache = createCacheHanlder(`cache/${createHash(params)}`);
-    
-    async function getToken() {
+
+    async function getToken(options = defaultOptions.getToken) {
         const getOptions = {
             method: 'POST',
             url: `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
@@ -24,23 +30,25 @@ module.exports = function (credentials, options = { createCache: true }) {
             }
         };
 
+        let r;
+
         if (cache.hasCache()) {
-            return cache.getCache().access_token;
+            return responseSaver.save(cache.getCache().access_token, options);
         } else {
             const response = await request.get(getOptions);
             request.catchResponse(response);
-            if(options.createCache) {
-                cache.setCache(response, response.expires_in * 60000);
+            if (options.createCache || mainOptions.createCache) {
+                cache.setCache(response, response.expires_in * 1000);
             }
-            return response.access_token;
+            return responseSaver.save(response.access_token, options);
         }
     }
 
-    async function unit(url, options) {
+    async function unit(url, options = defaultOptions.unit) {
         const token = await getToken();
     }
 
-    async function list(url, options = {}) {
+    async function list(url, options = defaultOptions.list) {
         const token = await getToken();
         const getOptions = {
             url,
@@ -49,19 +57,24 @@ module.exports = function (credentials, options = { createCache: true }) {
                 'Authorization': `Bearer ${token}`
             }
         };
-        
+
         let response = await request.pagination(getOptions);
         request.catchResponse(response);
-        if(Array.isArray(response)) {
-            if(options.filter) response = response.filter(options.filter);
-            if(options.map) response = response.map(options.map);
+        if (Array.isArray(response)) {
+            if (options.filter) response = response.filter(options.filter);
+            if (options.map) response = response.map(options.map);
         } else {
-            console.warn('Response is not an Array, please verify if you are using the correct request type');
+            console.warn('[!] Warning: Response is not an Array, please verify if you are using the correct request type');
         }
+
+        if (options.saveTo || mainOptions.saveTo) {
+            request.saveTo(response, options.saveTo || mainOptions.saveTo);
+        }
+
         return response;
     }
 
-    async function massive(url, options) {
+    async function massive(url, options = defaultOptions.massive) {
         const token = await getToken();
 
     }

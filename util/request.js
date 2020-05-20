@@ -76,10 +76,6 @@ function catchResponse(response) {
     }
 }
 
-function saveTo(response, path) {
-
-}
-
 module.exports = function () {
     return {
         get,

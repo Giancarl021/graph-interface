@@ -1,10 +1,10 @@
 const fs = require('fs');
+const { isAbsolute } = require('path');
 const opn = require('open');
 
 module.exports = function (path) {
-
     const pathToRoot = process.cwd().replace(/\\/g, '/');
-    const _path = `${pathToRoot}/${path}`;
+    const _path = isAbsolute(path) ? path : `${pathToRoot}/${path}`;
 
     function save(data) {
         fs.writeFileSync(_path, data);
