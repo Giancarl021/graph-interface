@@ -9,13 +9,13 @@ const listDefault = {
     reduce: null
 }
 
-module.exports = {
+const defaultOptions = {
     main: {
         createCache: true,
         saveOn: null,
         supressWarnings: false
     },
-    getToken: {
+    token: {
         createCache: true,
         saveOn: null
     },
@@ -33,4 +33,18 @@ module.exports = {
         ...subDefault,
         ...listDefault
     }
+};
+
+function fillOptions(options, filler) {
+    const f = defaultOptions[filler];
+    for (const key in f) {
+        if (!options.hasOwnProperty(key)) {
+            options[key] = filler[key];
+        }
+    }
+}
+
+module.exports = {
+    defaultOptions,
+    fillOptions
 };

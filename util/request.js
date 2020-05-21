@@ -89,6 +89,9 @@ function requireOptions(source, keys) {
 }
 
 function catchResponse(response) {
+    if(!response) {
+        throw new Error('Response empty');
+    }
     if (response.error) {
         throw new Error(response.error_description || response.error);
     }

@@ -3,9 +3,13 @@ const createCacheHanlder = require('./util/cache');
 const createResponseHandler = require('./util/save');
 const createObjectHandler = require('./util/object');
 const createHash = require('./util/hash');
-const defaultOptions = require('./util/options');
+const {
+    defaultOptions,
+    fillOptions
+} = require('./util/options');
 
 module.exports = function (credentials, mainOptions = defaultOptions.main) {
+    fillOptions(mainOptions, 'main');
     const request = createRequestHandler();
     const responser = createResponseHandler(mainOptions);
     const params = request.requireParams(credentials, ['tenant-id', 'client-id', 'client-secret']);
@@ -17,7 +21,8 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
 
     const cache = createCacheHanlder(`.gphcache/${createHash(params)}`);
 
-    async function getToken(options = defaultOptions.getToken) {
+    async function getToken(options = defaultOptions.token) {
+        fillOptions(options, 'token');
         const getOptions = {
             method: 'POST',
             url: `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
@@ -45,6 +50,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
     }
 
     async function unit(url, options = defaultOptions.unit) {
+        fillOptions(options, 'unit');
         const token = await getToken();
         const getOptions = {
             url,
@@ -54,25 +60,27 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             }
         };
 
-        let response = (await request.get(getOptions)).value;
+        let response = await request.get(getOptions);
         request.catchResponse(response);
+
+        if (Array.isArray(response.value)) {
+            warn('[!] Warning: Response value is an Array, please verify if you are using the correct request or method.');
+        }
+
         if (typeof response === 'object') {
-            if (!Array.isArray(response)) {
-                if (options.fields && options.fields.length) {
-                    const obj = createObjectHandler(response);
-                    return responser.save(obj.fields(options.fields), options);
-                }
-            } else {
-                warn('[!] Warning: Response is an Array, please verify if you are using the correct request type.');
+            if (options.fields && options.fields.length) {
+                const obj = createObjectHandler(response);
+                return responser.save(obj.fields(options.fields), options);
             }
         } else {
-            warn('[!] Warning: Response is not an Object, please verify if you are using the correct request type.');
+            warn('[!] Warning: Response is not an Object, please verify if you are using the correct request or method.');
         }
 
         return responser.save(response, options);
     }
 
     async function list(url, options = defaultOptions.list) {
+        fillOptions(options, 'list');
         const token = await getToken();
         const getOptions = {
             url,
@@ -89,19 +97,19 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             if (options.map) response = response.map(options.map);
             if (options.reduce) response = response.reduce(options.reduce);
         } else {
-            warn('[!] Warning: Response is not an Array, please verify if you are using the correct request type.');
+            warn('[!] Warning: Response is not an Array, please verify if you are using the correct request or method.');
         }
 
         return responser.save(response, options);
     }
 
-    async function massive(url, options = defaultOptions.massive) {
+    async function massive(urlPattern, values, options = defaultOptions.massive) {
+        fillOptions(options, 'massive');
         const token = await getToken();
-
     }
 
     function warn(message) {
-        if(!mainOptions.supressWarnings) {
+        if (!mainOptions.supressWarnings) {
             console.warn(message);
         }
     }
