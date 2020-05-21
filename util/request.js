@@ -12,6 +12,7 @@ function get(options) {
 }
 
 async function pagination(getOptions, limit = null, offset = null) {
+    if (limit === 0) return [];
     let r = [],
         i = 0;
     let url = getOptions.url;
@@ -27,12 +28,12 @@ async function pagination(getOptions, limit = null, offset = null) {
     while (url.length) {
         const content = await getContent(url);
         r = r.concat(content.value);
-        url = (limit !== null && ++i >= limit ? '' : (content['@odata.nextLink'] || ''));
+        url = (limit && ++i >= limit ? '' : (content['@odata.nextLink'] || ''));
     }
     return r;
 
     async function getContent(url) {
-        if(url) getOptions.url = url;
+        if (url) getOptions.url = url;
         const content = await get(getOptions);
         if (content.error) {
             throw new Error(content.error.message);

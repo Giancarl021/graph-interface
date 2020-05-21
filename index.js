@@ -13,6 +13,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         clientId,
         clientSecret
     } = params;
+
     const cache = createCacheHanlder(`cache/${createHash(params)}`);
 
     async function getToken(options = defaultOptions.getToken) {
