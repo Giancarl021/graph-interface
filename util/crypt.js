@@ -14,8 +14,6 @@ module.exports = function (password) {
         .toString('hex')
         .slice(0, 16);
 
-    console.log(_password, iv);
-
     function encrypt(text) {
         const cipher = crypto.createCipheriv(algorithm, _password, iv);
         let crypted = cipher.update(text, 'utf8', 'hex');
