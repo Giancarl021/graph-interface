@@ -16,7 +16,6 @@ module.exports = function (path) {
         save,
         load,
         remove: file.remove,
-        exists: file.exists,
-        open: file.open
+        exists: file.exists
     }
 }

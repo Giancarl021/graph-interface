@@ -19,7 +19,8 @@ module.exports = {
         saveOn: null
     },
     unit: {
-        ...subDefault
+        ...subDefault,
+        fields: []
     },
     list: {
         ...subDefault,

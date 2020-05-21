@@ -1,6 +1,7 @@
 const createRequestHandler = require('./util/request');
 const createCacheHanlder = require('./util/cache');
 const createResponseHandler = require('./util/save');
+const createObjectHandler = require('./util/object');
 const createHash = require('./util/hash');
 const defaultOptions = require('./util/options');
 
@@ -55,13 +56,11 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
 
         let response = await request.get(getOptions);
         request.catchResponse(response);
-        console.log(response);
-        // if (Array.isArray(response)) {
-        //     if (options.filter) response = response.filter(options.filter);
-        //     if (options.map) response = response.map(options.map);
-        // } else {
-        //     console.warn('[!] Warning: Response is not an Array, please verify if you are using the correct request type');
-        // }
+        
+        if(options.fields && options.fields.length) {
+            const obj = createObjectHandler(response);
+            return responser.save(obj.fields(options.fields), options);
+        }
 
         return responser.save(response, options);
     }

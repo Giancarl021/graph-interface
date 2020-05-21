@@ -1,6 +1,6 @@
 # Cache
 cache/**/*.json
-
+responses/**/*
 # Local files
 
 *.spec.js

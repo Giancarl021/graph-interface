@@ -1,6 +1,5 @@
 const fs = require('fs');
 const { isAbsolute } = require('path');
-const opn = require('open');
 
 module.exports = function (path) {
     const pathToRoot = process.cwd().replace(/\\/g, '/');
@@ -22,15 +21,10 @@ module.exports = function (path) {
         return fs.existsSync(_path);
     }
 
-    async function open() {
-        opn(_path);
-    }
-
     return {
         save,
         load,
         remove,
-        exists,
-        open
+        exists
     }
 }
