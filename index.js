@@ -54,12 +54,19 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             }
         };
 
-        let response = await request.get(getOptions);
+        let response = (await request.get(getOptions)).value;
         request.catchResponse(response);
-        
-        if(options.fields && options.fields.length) {
-            const obj = createObjectHandler(response);
-            return responser.save(obj.fields(options.fields), options);
+        if (typeof response === 'object') {
+            if (!Array.isArray(response)) {
+                if (options.fields && options.fields.length) {
+                    const obj = createObjectHandler(response);
+                    return responser.save(obj.fields(options.fields), options);
+                }
+            } else {
+                warn('[!] Warning: Response is an Array, please verify if you are using the correct request type.');
+            }
+        } else {
+            warn('[!] Warning: Response is not an Object, please verify if you are using the correct request type.');
         }
 
         return responser.save(response, options);
@@ -82,7 +89,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             if (options.map) response = response.map(options.map);
             if (options.reduce) response = response.reduce(options.reduce);
         } else {
-            console.warn('[!] Warning: Response is not an Array, please verify if you are using the correct request type');
+            warn('[!] Warning: Response is not an Array, please verify if you are using the correct request type.');
         }
 
         return responser.save(response, options);
@@ -91,6 +98,12 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
     async function massive(url, options = defaultOptions.massive) {
         const token = await getToken();
 
+    }
+
+    function warn(message) {
+        if(!mainOptions.supressWarnings) {
+            console.warn(message);
+        }
     }
 
     return {

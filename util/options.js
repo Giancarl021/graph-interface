@@ -12,7 +12,8 @@ const listDefault = {
 module.exports = {
     main: {
         createCache: true,
-        saveOn: null
+        saveOn: null,
+        supressWarnings: false
     },
     getToken: {
         createCache: true,
