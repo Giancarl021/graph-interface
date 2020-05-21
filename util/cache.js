@@ -8,6 +8,7 @@ module.exports = function (path) {
 
     const file = createFileHandler(path);
     const crypt = createCryptHandler(path);
+    console.log(path);
 
     function getCache() {
         if (!hasCache()) {
