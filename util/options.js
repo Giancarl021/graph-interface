@@ -1,6 +1,12 @@
-const requestDefault = {
+const subDefault = {
     saveOn: null,
     method: 'GET'
+}
+
+const listDefault = {
+    map: null,
+    filter: null,
+    reduce: null
 }
 
 module.exports = {
@@ -13,16 +19,16 @@ module.exports = {
         saveOn: null
     },
     unit: {
-        ...requestDefault
+        ...subDefault
     },
     list: {
-        ...requestDefault,
-        map: null,
-        filter: null
+        ...subDefault,
+        ...listDefault,
+        limit: null,
+        offset: null
     },
     massive: {
-        ...requestDefault,
-        map: null,
-        filter: null
+        ...subDefault,
+        ...listDefault
     }
 };

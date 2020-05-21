@@ -44,6 +44,25 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
 
     async function unit(url, options = defaultOptions.unit) {
         const token = await getToken();
+        const getOptions = {
+            url,
+            method: options.method || 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        };
+
+        let response = await request.get(getOptions);
+        request.catchResponse(response);
+        console.log(response);
+        // if (Array.isArray(response)) {
+        //     if (options.filter) response = response.filter(options.filter);
+        //     if (options.map) response = response.map(options.map);
+        // } else {
+        //     console.warn('[!] Warning: Response is not an Array, please verify if you are using the correct request type');
+        // }
+
+        return responser.save(response, options);
     }
 
     async function list(url, options = defaultOptions.list) {
@@ -56,11 +75,12 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             }
         };
 
-        let response = await request.pagination(getOptions);
+        let response = await request.pagination(getOptions, options.limit, options.offset);
         request.catchResponse(response);
         if (Array.isArray(response)) {
             if (options.filter) response = response.filter(options.filter);
             if (options.map) response = response.map(options.map);
+            if (options.reduce) response = response.reduce(options.reduce);
         } else {
             console.warn('[!] Warning: Response is not an Array, please verify if you are using the correct request type');
         }
