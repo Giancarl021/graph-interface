@@ -1,6 +1,9 @@
 const createJsonHandler = require('./json');
+const createDirectoryHandler = require('./directory');
 
 module.exports = function (path) {
+    const dir = createDirectoryHandler(path.split(/(\/|\\)/).filter(e => !/(\/|\\)/.test(e)).slice(0, -1).join('/'));
+    dir.make(true);
 
     const json = createJsonHandler(path);
 

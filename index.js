@@ -15,7 +15,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         clientSecret
     } = params;
 
-    const cache = createCacheHanlder(`cache/${createHash(params)}`);
+    const cache = createCacheHanlder(`.gphcache/${createHash(params)}`);
 
     async function getToken(options = defaultOptions.getToken) {
         const getOptions = {

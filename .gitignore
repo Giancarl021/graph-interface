@@ -1,9 +1,9 @@
 # Cache
-cache/**/*.json
-responses/**/*
-# Local files
+.gphcache/
 
+# Local files
 *.spec.js
+responses/**/*
 
 # Logs
 logs
