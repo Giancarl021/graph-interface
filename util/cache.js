@@ -1,18 +1,20 @@
-const createJsonHandler = require('./json');
+const createFileHandler = require('./file');
 const createDirectoryHandler = require('./directory');
+const createCryptHandler = require('./crypt');
 
 module.exports = function (path) {
     const dir = createDirectoryHandler(path.split(/(\/|\\)/).filter(e => !/(\/|\\)/.test(e)).slice(0, -1).join('/'));
     dir.make(true);
 
-    const json = createJsonHandler(path);
+    const file = createFileHandler(path);
+    const crypt = createCryptHandler(path);
 
     function getCache() {
         if (!hasCache()) {
             throw new Error('Cache file does not exists');
         }
-
-        return json.load().data;
+        
+        return _getData().data;
     }
 
     function setCache(data, expiresIn) {
@@ -21,19 +23,31 @@ module.exports = function (path) {
             expireTimestamp: Date.now() + expiresIn
         }
 
-        json.save(cache);
+        _setData(cache);
     }
 
     function hasCache() {
-        if (!json.exists()) return false;
-        const cache = json.load();
+        if (!file.exists()) return false;
+        const cache = _getData();
 
         if (Date.now() <= cache.expireTimestamp) {
             return true;
         } else {
-            json.remove();
+            file.remove();
             return false;
         }
+    }
+
+    function _getData() {
+        const enc = file.load();
+        const dec = crypt.decrypt(enc);
+        return JSON.parse(dec);
+    }
+
+    function _setData(data) {
+        const dec = JSON.stringify(data);
+        const enc = crypt.encrypt(dec);
+        file.save(enc);
     }
 
     return {
