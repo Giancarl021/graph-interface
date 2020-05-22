@@ -106,10 +106,12 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
 
     async function massive(urlPattern, values, options = defaultOptions.massive) {
         request.requireOptions(options, ['type']);
-        if(!['unit', 'list'].includes(options.type)) {
+        if (!['unit', 'list'].includes(options.type)) {
             throw new Error('The key "type" must have the value "unit" or "list"');
         }
+
         fillOptions(options, 'massive');
+
         const pattern = createPatternParser(urlPattern, /{[^{}]*?}/g, /({|})*/g);
         const urls = pattern.replaceArray(values);
         if (!urls.length) return [];
@@ -128,7 +130,12 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         }
 
         let fallback = [];
-        let response = await request.cycle(getOptions, options.requestsPerCycle, fallback);
+        let response = await request.cycle(
+            getOptions,
+            options.requestsPerCycle,
+            fallback,
+            options.type === 'unit' ? request.get : request.pagination
+        );
 
         return responser.save(response, options);
     }
