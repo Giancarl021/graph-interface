@@ -105,6 +105,10 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
     }
 
     async function massive(urlPattern, values, options = defaultOptions.massive) {
+        request.requireOptions(options, ['type']);
+        if(!['unit', 'list'].includes(options.type)) {
+            throw new Error('The key "type" must have the value "unit" or "list"');
+        }
         fillOptions(options, 'massive');
         const pattern = createPatternParser(urlPattern, /{[^{}]*?}/g, /({|})*/g);
         const urls = pattern.replaceArray(values);

@@ -101,7 +101,7 @@ function requireParams(source, params) {
 function requireOptions(source, keys) {
     const missing = [];
     for (const key of keys) {
-        if (!source[key]) missing.push(key);
+        if (!source.hasOwnProperty(key)) missing.push(key);
     }
 
     if (missing.length) {
