@@ -108,11 +108,25 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         fillOptions(options, 'massive');
         const pattern = createPatternParser(urlPattern, /{[^{}]*?}/g, /({|})*/g);
         const urls = pattern.replaceArray(values);
-        if(!urls.length) return [];
+        if (!urls.length) return [];
 
         const token = await getToken();
+        const getOptions = {};
 
-        // console.log(pattern.replaceArray(values));
+        for (const url of urls) {
+            getOptions[url] = {
+                url,
+                method: options.method || 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            };
+        }
+
+        let fallback = [];
+        let response = await request.cycle(getOptions, options.requestsPerCycle, fallback);
+
+        return responser.save(response, options);
     }
 
     function warn(message) {

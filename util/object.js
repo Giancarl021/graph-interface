@@ -20,8 +20,32 @@ module.exports = function (source) {
         return r;
     }
 
+    function array() {
+        const r = [];
+        for(const key in source) {
+            r.push(source[key]);
+        }
+
+        return r;
+    }
+
+    async function awaitField(field) {
+        source[field] = await source[field];
+    }
+
+    async function awaitAll() {
+        await Promise.all(array());
+
+        for(const key in source) {
+            awaitField(key);
+        }
+    }
+
     return {
         size,
-        fields
+        fields,
+        array,
+        awaitField,
+        awaitAll
     };
 }

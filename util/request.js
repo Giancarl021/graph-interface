@@ -1,4 +1,5 @@
 const request = require('request');
+const createObjectHandler = require('./object');
 
 // Request functions
 
@@ -42,8 +43,28 @@ async function pagination(getOptions, limit = null, offset = null) {
     }
 }
 
-async function massive() {
-    // TODO
+async function cycle(map, pulse, fallback) {
+    let r = {};
+    const object = createObjectHandler(r);
+    for (const key in map) {
+        const options = map[key];
+        r[key] = new Promise(resolve => {
+            get(options)
+                .then(resolve)
+                .catch(() => {
+                    fallback.push(key);
+                    resolve(null);
+                })
+        });
+
+        if(object.size() % pulse === 0) {
+            await object.awaitAll();
+        }
+    }
+
+    await object.awaitAll();
+
+    return r;
 }
 
 // Helper functions
@@ -89,7 +110,7 @@ function requireOptions(source, keys) {
 }
 
 function catchResponse(response) {
-    if(!response) {
+    if (!response) {
         throw new Error('Response empty');
     }
     if (response.error) {
@@ -101,7 +122,7 @@ module.exports = function () {
     return {
         get,
         pagination,
-        massive,
+        cycle,
         requireOptions,
         requireParams,
         catchResponse
