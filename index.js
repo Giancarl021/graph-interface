@@ -119,17 +119,10 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         const token = await getToken();
         const getOptions = {};
 
-        for (const url of urls) {
-            getOptions[url] = {
-                url,
-                method: options.method || 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            };
-        }
+        buildRequests(urls, getOptions);
 
         let fallback = [];
+        let failures = 0;
         let response = await request.cycle(
             getOptions,
             options.requestsPerCycle,
@@ -137,7 +130,36 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             options.type === 'unit' ? request.get : request.pagination
         );
 
+        while (fallback.length || failures < options.attempts) {
+            const temp = [];
+            const o = {};
+            buildRequests(fallback, o);
+            response = {
+                ...response,
+                ...await request.cycle(
+                    o,
+                    options.requestsPerCycle,
+                    temp,
+                    options.type === 'unit' ? request.get : request.pagination
+                )
+            };
+            if (fallback.length === temp.length) failures++;
+            fallback = temp;
+        }
+
         return responser.save(response, options);
+
+        function buildRequests(urls, destination) {
+            for (const url of urls) {
+                destination[url] = {
+                    url,
+                    method: options.method || 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                };
+            }
+        }
     }
 
     function warn(message) {
