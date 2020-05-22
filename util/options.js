@@ -31,7 +31,9 @@ const defaultOptions = {
     },
     massive: {
         ...subDefault,
-        ...listDefault
+        ...listDefault,
+        attempts: 3,
+        requestsPerCycle: 250
     }
 };
 

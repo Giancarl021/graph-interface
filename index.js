@@ -3,6 +3,7 @@ const createCacheHanlder = require('./util/cache');
 const createResponseHandler = require('./util/save');
 const createObjectHandler = require('./util/object');
 const createHash = require('./util/hash');
+const createPatternParser = require('./util/pattern');
 const {
     defaultOptions,
     fillOptions
@@ -105,7 +106,13 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
 
     async function massive(urlPattern, values, options = defaultOptions.massive) {
         fillOptions(options, 'massive');
+        const pattern = createPatternParser(urlPattern, /{[^{}]*?}/g, /({|})*/g);
+        const urls = pattern.replaceArray(values);
+        if(!urls.length) return [];
+
         const token = await getToken();
+
+        // console.log(pattern.replaceArray(values));
     }
 
     function warn(message) {
