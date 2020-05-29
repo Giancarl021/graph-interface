@@ -155,7 +155,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             fallback = temp;
         }
 
-        // require('fs').writeFileSync('responses/mid.json', JSON.stringify(response, null, 4));
+        require('fs').writeFileSync('responses/mid.json', JSON.stringify(response, null, 4));
 
         response = buildResponses(response, options.type, values, binder);
 
@@ -192,33 +192,28 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         function buildResponses(response, type, values, binder) {
             const r = {};
             const keys = values[binder];
-            let i = 0;
             for (const key in response) {
                 let [j, l] = key.split('-');
                 for(; j <= l; j++) {
-                    const item = response[key].responses.find(item => item.id === keys[i]);
-                    
-                    if(!item) console.log(key, i, keys.length, keys[i]);
-
+                    const item = response[key].responses.find(item => item.id === keys[j]);
                     const temp = item && item.body ? item.body : null;
                     if(temp && temp.error) {
-                        warn('Request Error: ' + key + ':' + keys[i]);
+                        warn('Request Error: ' + key + ':' + keys[j]);
                         continue;
                     }
-                    r[keys[i]] = type === 'unit' ? temp || null : (temp && temp.value ? temp.value : []);
+                    r[keys[j]] = type === 'unit' ? temp || null : (temp && temp.value ? temp.value : []);
 
                     if(options.type === 'list') {
-                        if (Array.isArray(r[keys[i]])) {
-                            if (options.filter) r[keys[i]] = r[keys[i]].filter(options.filter);
-                            if (options.map) r[keys[i]] = r[keys[i]].map(options.map);
-                            if (options.reduce) r[keys[i]] = r[keys[i]].reduce(options.reduce);
+                        if (Array.isArray(r[keys[j]])) {
+                            if (options.filter) r[keys[j]] = r[keys[j]].filter(options.filter);
+                            if (options.map) r[keys[j]] = r[keys[j]].map(options.map);
+                            if (options.reduce) r[keys[j]] = r[keys[j]].reduce(options.reduce);
                         } else {
                             warn('Response is not an Array, please verify if you are using the correct request or method.');
                         }
                     } else if(options.map || options.reduce || options.filter) {
                         warn('Array operations will only be applied with list request type.');
                     }
-                    i++;
                 }
             }
             return r;
