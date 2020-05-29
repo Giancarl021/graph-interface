@@ -43,13 +43,13 @@ async function pagination(getOptions, limit = null, offset = null) {
     }
 }
 
-async function cycle(map, pulse, fallback, caller) {
+async function cycle(map, pulse, fallback) {
     let r = {};
     const object = createObjectHandler(r);
     for (const key in map) {
         const options = map[key];
         r[key] = new Promise(resolve => {
-            caller(options)
+            get(options)
                 .then(resolve)
                 .catch(() => {
                     fallback.push(key);

@@ -11,6 +11,7 @@ const {
 
 module.exports = function (credentials, mainOptions = defaultOptions.main) {
     fillOptions(mainOptions, 'main');
+    const endpoint = `https://graph.microsoft.com/${mainOptions.version}`;
     const request = createRequestHandler();
     const responser = createResponseHandler(mainOptions);
     const params = request.requireParams(credentials, ['tenant-id', 'client-id', 'client-secret']);
@@ -54,8 +55,8 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         fillOptions(options, 'unit');
         const token = await getToken();
         const getOptions = {
-            url,
-            method: options.method || 'GET',
+            url: `${endpoint}/${url}`,
+            method: options.method,
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -84,8 +85,8 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         fillOptions(options, 'list');
         const token = await getToken();
         const getOptions = {
-            url,
-            method: options.method || 'GET',
+            url: `${endpoint}/${url}`,
+            method: options.method,
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -124,19 +125,18 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         let fallback = [];
         let failures = 0;
 
-        if(typeof options.requestsPerCycle !== 'number') {
+        if (typeof options.requestsPerCycle !== 'number') {
             throw new Error('Option requestPerCycle must be an valid number');
         }
 
-        if(typeof options.attempts !== 'number') {
+        if (typeof options.attempts !== 'number') {
             throw new Error('Option attemps must be an valid number');
         }
 
         let response = await request.cycle(
             getOptions,
             options.requestsPerCycle,
-            fallback,
-            options.type === 'unit' ? request.get : request.pagination
+            fallback
         );
 
         while (fallback.length || (fallback.length && failures < options.attempts)) {
@@ -148,26 +148,42 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
                 ...await request.cycle(
                     o,
                     options.requestsPerCycle,
-                    temp,
-                    options.type === 'unit' ? request.get : request.pagination
+                    temp
                 )
             };
             if (fallback.length === temp.length) failures++;
             fallback = temp;
         }
 
+        buildResponses(response, options.type);
+
         return responser.save(response, options);
 
         function buildRequests(urls, destination) {
-            for (const url of urls) {
-                destination[url] = {
-                    url,
-                    method: options.method || 'GET',
+            const chunk = 20;
+            const requests = urls.map((url, id) => ({
+                url,
+                method: options.method,
+                id
+            }));
+
+            for (let i = 0; i < urls.length; i += chunk) {
+                destination[`${i}-${i + chunk - 1}`] = {
+                    url: `${endpoint}/$batch`,
+                    method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        requests: requests.slice(i, i + chunk)
+                    })
                 };
             }
+        }
+
+        function buildResponses(response, type) {
+
         }
     }
 

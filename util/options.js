@@ -1,6 +1,11 @@
 const subDefault = {
     saveOn: null,
-    method: 'GET'
+    method: 'GET',
+    cache: {
+       id: null,
+       hash: true,
+       expiresIn: 3600
+   }
 }
 
 const listDefault = {
@@ -11,6 +16,7 @@ const listDefault = {
 
 const defaultOptions = {
     main: {
+        version: 'v1.0',
         createCache: true,
         saveOn: null,
         supressWarnings: false
