@@ -42,7 +42,7 @@ function fillOptions(options, filler) {
     const f = defaultOptions[filler];
     for (const key in f) {
         if (!options.hasOwnProperty(key)) {
-            options[key] = filler[key];
+            options[key] = f[key];
         }
     }
 }

@@ -1,6 +1,6 @@
 const createRequestHandler = require('./util/request');
 const createCacheHanlder = require('./util/cache');
-const createResponseHandler = require('./util/save');
+const createResponseHandler = require('./util/response');
 const createObjectHandler = require('./util/object');
 const createHash = require('./util/hash');
 const createPatternParser = require('./util/pattern');
@@ -123,6 +123,15 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
 
         let fallback = [];
         let failures = 0;
+
+        if(typeof options.requestsPerCycle !== 'number') {
+            throw new Error('Option requestPerCycle must be an valid number');
+        }
+
+        if(typeof options.attempts !== 'number') {
+            throw new Error('Option attemps must be an valid number');
+        }
+
         let response = await request.cycle(
             getOptions,
             options.requestsPerCycle,
@@ -130,7 +139,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             options.type === 'unit' ? request.get : request.pagination
         );
 
-        while (fallback.length || failures < options.attempts) {
+        while (fallback.length || (fallback.length && failures < options.attempts)) {
             const temp = [];
             const o = {};
             buildRequests(fallback, o);
