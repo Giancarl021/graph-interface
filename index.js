@@ -66,7 +66,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         request.catchResponse(response);
 
         if (Array.isArray(response.value)) {
-            warn('[!] Warning: Response value is an Array, please verify if you are using the correct request or method.');
+            warn('Response value is an Array, please verify if you are using the correct request or method.');
         }
 
         if (typeof response === 'object') {
@@ -75,7 +75,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
                 return responser.save(obj.fields(options.fields), options);
             }
         } else {
-            warn('[!] Warning: Response is not an Object, please verify if you are using the correct request or method.');
+            warn('Response is not an Object, please verify if you are using the correct request or method.');
         }
 
         return responser.save(response, options);
@@ -99,7 +99,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             if (options.map) response = response.map(options.map);
             if (options.reduce) response = response.reduce(options.reduce);
         } else {
-            warn('[!] Warning: Response is not an Array, please verify if you are using the correct request or method.');
+            warn('Response is not an Array, please verify if you are using the correct request or method.');
         }
 
         return responser.save(response, options);
@@ -120,7 +120,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         const token = await getToken();
         const getOptions = {};
 
-        buildRequests(urls, getOptions);
+        const binder = buildRequests(urls, getOptions, values);
 
         let fallback = [];
         let failures = 0;
@@ -142,7 +142,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         while (fallback.length || (fallback.length && failures < options.attempts)) {
             const temp = [];
             const o = {};
-            buildRequests(fallback, o);
+            buildRequests(fallback, o, values, binder);
             response = {
                 ...response,
                 ...await request.cycle(
@@ -155,20 +155,25 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             fallback = temp;
         }
 
-        buildResponses(response, options.type);
+        // require('fs').writeFileSync('responses/mid.json', JSON.stringify(response, null, 4));
+
+        response = buildResponses(response, options.type, values, binder);
 
         return responser.save(response, options);
 
-        function buildRequests(urls, destination) {
+        function buildRequests(urls, destination, values, bind = null) {
+            const keys = Object.keys(values);
+            const binder = bind || keys[Math.floor(Math.random() * keys.length)];
+            const ids = values[binder];
             const chunk = 20;
-            const requests = urls.map((url, id) => ({
+            const requests = urls.map((url, i) => ({
                 url,
                 method: options.method,
-                id
+                id: ids[i]
             }));
 
             for (let i = 0; i < urls.length; i += chunk) {
-                destination[`${i}-${i + chunk - 1}`] = {
+                destination[`${i}-${Math.min(i + chunk, urls.length) - 1}`] = {
                     url: `${endpoint}/$batch`,
                     method: 'POST',
                     headers: {
@@ -176,20 +181,53 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        requests: requests.slice(i, i + chunk)
+                        requests: requests.slice(i, Math.min(i + chunk, urls.length))
                     })
                 };
             }
+
+            return binder;
         }
 
-        function buildResponses(response, type) {
+        function buildResponses(response, type, values, binder) {
+            const r = {};
+            const keys = values[binder];
+            let i = 0;
+            for (const key in response) {
+                let [j, l] = key.split('-');
+                for(; j <= l; j++) {
+                    const item = response[key].responses.find(item => item.id === keys[i]);
+                    
+                    if(!item) console.log(key, i, keys.length, keys[i]);
 
+                    const temp = item && item.body ? item.body : null;
+                    if(temp && temp.error) {
+                        warn('Request Error: ' + key + ':' + keys[i]);
+                        continue;
+                    }
+                    r[keys[i]] = type === 'unit' ? temp || null : (temp && temp.value ? temp.value : []);
+
+                    if(options.type === 'list') {
+                        if (Array.isArray(r[keys[i]])) {
+                            if (options.filter) r[keys[i]] = r[keys[i]].filter(options.filter);
+                            if (options.map) r[keys[i]] = r[keys[i]].map(options.map);
+                            if (options.reduce) r[keys[i]] = r[keys[i]].reduce(options.reduce);
+                        } else {
+                            warn('Response is not an Array, please verify if you are using the correct request or method.');
+                        }
+                    } else if(options.map || options.reduce || options.filter) {
+                        warn('Array operations will only be applied with list request type.');
+                    }
+                    i++;
+                }
+            }
+            return r;
         }
     }
 
     function warn(message) {
         if (!mainOptions.supressWarnings) {
-            console.warn(message);
+            console.warn('[!] Warning: ' + message);
         }
     }
 

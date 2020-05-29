@@ -39,7 +39,7 @@ const defaultOptions = {
         ...subDefault,
         ...listDefault,
         attempts: 3,
-        requestsPerCycle: 250,
+        requestsPerCycle: 50,
         type: null
     }
 };
