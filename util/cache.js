@@ -45,7 +45,7 @@ module.exports = function (path) {
     }
 
     function _setData(data) {
-        const dec = JSON.stringify(data);
+        const dec = JSON.stringify(data, null, Math.floor(Math.random() * 8));
         const enc = crypt.encrypt(dec);
         file.save(enc);
     }
