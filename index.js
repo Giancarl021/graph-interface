@@ -137,7 +137,6 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
 
         const token = await getToken();
         const getOptions = {};
-
         const binder = buildRequests(urls, getOptions, values);
 
         let fallback = [];
@@ -158,6 +157,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         );
 
         while (fallback.length || (fallback.length && failures < options.attempts)) {
+            console.log('Fallback size: ' + fallback.length, fallback);
             const temp = [];
             const o = {};
             buildRequests(fallback, o, values, binder);
@@ -216,6 +216,10 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             for (const key in response) {
                 let [j, l] = key.split('-');
                 for (; j <= l; j++) {
+                    if(!response[key]) {
+                        console.log('ERR: ' + key);
+                        continue;
+                    }
                     const item = response[key].responses.find(item => item.id === keys[j]);
                     const temp = item && item.body ? item.body : null;
                     if (temp && temp.error) {
