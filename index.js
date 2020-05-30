@@ -20,7 +20,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         clientSecret
     } = request.requireParams(credentials, ['tenant-id', 'client-id', 'client-secret']);
 
-    const tokenCache = createCacheHandler(`.gphcache/${createHash(clientId + clientSecret + tenantId)}`);
+    const tokenCache = createCacheHandler(`.gphcache/${createHash(clientId + clientSecret + tenantId)}`, mainOptions.cache.cleanupInterval);
 
     async function getToken(options = defaultOptions.token) {
         fillOptions(options, 'token');

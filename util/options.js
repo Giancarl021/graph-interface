@@ -16,7 +16,10 @@ const defaultOptions = {
     main: {
         version: 'v1.0',
         tokenCache: true,
-        supressWarnings: false
+        supressWarnings: false,
+        cache: {
+            cleanupInterval: 3600
+        }
     },
     token: {
         saveOn: null

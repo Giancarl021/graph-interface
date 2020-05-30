@@ -2,9 +2,7 @@ const createFileHandler = require('./file');
 const createDirectoryHandler = require('./directory');
 const createCryptHandler = require('./crypt');
 
-const lockTimeOfLife = 3600;
-
-module.exports = function (path) {
+module.exports = function (path, lockTimeOfLife = null) {
     const dirPath = path.split(/(\/|\\)/).filter(e => !/(\/|\\)/.test(e)).slice(0, -1).join('/');
     const dir = createDirectoryHandler(dirPath);
     dir.make(true);
@@ -59,6 +57,7 @@ module.exports = function (path) {
     }
 
     function _cleanup() {
+        if(!lockTimeOfLife) return;
         const file = createFileHandler(`${dirPath}/lock`);
         if(file.exists()) {
             if(Date.now() >= file.load()) {
