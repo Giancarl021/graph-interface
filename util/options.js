@@ -3,7 +3,6 @@ const subDefault = {
     method: 'GET',
     cache: {
        id: null,
-       hash: true,
        expiresIn: 3600
    }
 }
@@ -17,12 +16,11 @@ const listDefault = {
 const defaultOptions = {
     main: {
         version: 'v1.0',
-        createCache: true,
+        tokenCache: true,
         saveOn: null,
         supressWarnings: false
     },
     token: {
-        createCache: true,
         saveOn: null
     },
     unit: {

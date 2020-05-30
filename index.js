@@ -39,12 +39,12 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             }
         };
 
-        if (cache.hasCache()) {
+        if (mainOptions.tokenCache && cache.hasCache()) {
             return responser.save(cache.getCache().access_token, options);
         } else {
             const response = await request.get(getOptions);
             request.catchResponse(response);
-            if (options.createCache || mainOptions.createCache) {
+            if (mainOptions.tokenCache) {
                 cache.setCache(response, response.expires_in * 1000);
             }
             return responser.save(response.access_token, options);
