@@ -2,8 +2,7 @@ const subDefault = {
     saveOn: null,
     method: 'GET',
     cache: {
-       id: null,
-       expiresIn: 3600
+       expiresIn: null
    }
 }
 
