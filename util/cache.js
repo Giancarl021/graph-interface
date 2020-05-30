@@ -20,7 +20,7 @@ module.exports = function (path) {
     function setCache(data, expiresIn) {
         const cache = {
             data,
-            expireTimestamp: Date.now() + expiresIn
+            expireTimestamp: Date.now() + (expiresIn * 1000)
         }
 
         _setData(cache);

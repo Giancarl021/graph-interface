@@ -17,7 +17,6 @@ const defaultOptions = {
     main: {
         version: 'v1.0',
         tokenCache: true,
-        saveOn: null,
         supressWarnings: false
     },
     token: {

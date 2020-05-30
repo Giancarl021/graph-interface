@@ -1,5 +1,5 @@
 const createRequestHandler = require('./util/request');
-const createCacheHanlder = require('./util/cache');
+const createCacheHandler = require('./util/cache');
 const createResponseHandler = require('./util/response');
 const createObjectHandler = require('./util/object');
 const createHash = require('./util/hash');
@@ -13,15 +13,14 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
     fillOptions(mainOptions, 'main');
     const endpoint = `https://graph.microsoft.com/${mainOptions.version}`;
     const request = createRequestHandler();
-    const responser = createResponseHandler(mainOptions);
-    const params = request.requireParams(credentials, ['tenant-id', 'client-id', 'client-secret']);
+    const responser = createResponseHandler();
     const {
         tenantId,
         clientId,
         clientSecret
-    } = params;
+    } = request.requireParams(credentials, ['tenant-id', 'client-id', 'client-secret']);
 
-    const cache = createCacheHanlder(`.gphcache/${createHash(params)}`);
+    const tokenCache = createCacheHandler(`.gphcache/${createHash(clientId + clientSecret + tenantId)}`);
 
     async function getToken(options = defaultOptions.token) {
         fillOptions(options, 'token');
@@ -39,13 +38,13 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             }
         };
 
-        if (mainOptions.tokenCache && cache.hasCache()) {
-            return responser.save(cache.getCache().access_token, options);
+        if (mainOptions.tokenCache && tokenCache.hasCache()) {
+            return responser.save(tokenCache.getCache().access_token, options);
         } else {
             const response = await request.get(getOptions);
             request.catchResponse(response);
             if (mainOptions.tokenCache) {
-                cache.setCache(response, response.expires_in * 1000);
+                tokenCache.setCache(response, response.expires_in);
             }
             return responser.save(response.access_token, options);
         }
@@ -53,6 +52,11 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
 
     async function unit(url, options = defaultOptions.unit) {
         fillOptions(options, 'unit');
+        const cache = options.cache.id ? createCacheHandler(`.gphcache/${createHash(options.cache.id + url + JSON.stringify(options))}`) : null;
+        if(cache && cache.hasCache()) {
+            return responser.save(cache.getCache(), options);
+        }
+
         const token = await getToken();
         const getOptions = {
             url: `${endpoint}/${url}`,
@@ -72,17 +76,24 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         if (typeof response === 'object') {
             if (options.fields && options.fields.length) {
                 const obj = createObjectHandler(response);
-                return responser.save(obj.fields(options.fields), options);
+                response = obj.fields(options.fields);
             }
         } else {
             warn('Response is not an Object, please verify if you are using the correct request or method.');
         }
 
+        if(cache) {
+            cache.setCache(response, options.cache.expiresIn);
+        }
         return responser.save(response, options);
     }
 
     async function list(url, options = defaultOptions.list) {
         fillOptions(options, 'list');
+        const cache = options.cache.id ? createCacheHandler(`.gphcache/${createHash(options.cache.id + url + JSON.stringify(options))}`) : null;
+        if(cache && cache.hasCache()) {
+            return responser.save(cache.getCache(), options);
+        }
         const token = await getToken();
         const getOptions = {
             url: `${endpoint}/${url}`,
@@ -102,6 +113,9 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             warn('Response is not an Array, please verify if you are using the correct request or method.');
         }
 
+        if(cache) {
+            cache.setCache(response, options.cache.expiresIn);
+        }
         return responser.save(response, options);
     }
 
@@ -112,6 +126,10 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         }
 
         fillOptions(options, 'massive');
+        const cache = options.cache.id ? createCacheHandler(`.gphcache/${createHash(options.cache.id + url + JSON.stringify(options))}`) : null;
+        if(cache && cache.hasCache()) {
+            return responser.save(cache.getCache(), options);
+        }
 
         const pattern = createPatternParser(urlPattern, /{[^{}]*?}/g, /({|})*/g);
         const urls = pattern.replaceArray(values);
@@ -158,7 +176,10 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         require('fs').writeFileSync('responses/mid.json', JSON.stringify(response, null, 4));
 
         response = buildResponses(response, options.type, values, binder);
-
+        
+        if(cache) {
+            cache.setCache(response, options.cache.expiresIn);
+        }
         return responser.save(response, options);
 
         function buildRequests(urls, destination, values, bind = null) {
@@ -194,16 +215,16 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             const keys = values[binder];
             for (const key in response) {
                 let [j, l] = key.split('-');
-                for(; j <= l; j++) {
+                for (; j <= l; j++) {
                     const item = response[key].responses.find(item => item.id === keys[j]);
                     const temp = item && item.body ? item.body : null;
-                    if(temp && temp.error) {
+                    if (temp && temp.error) {
                         warn('Request Error: ' + key + ':' + keys[j]);
                         continue;
                     }
                     r[keys[j]] = type === 'unit' ? temp || null : (temp && temp.value ? temp.value : []);
 
-                    if(options.type === 'list') {
+                    if (options.type === 'list') {
                         if (Array.isArray(r[keys[j]])) {
                             if (options.filter) r[keys[j]] = r[keys[j]].filter(options.filter);
                             if (options.map) r[keys[j]] = r[keys[j]].map(options.map);
@@ -211,7 +232,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
                         } else {
                             warn('Response is not an Array, please verify if you are using the correct request or method.');
                         }
-                    } else if(options.map || options.reduce || options.filter) {
+                    } else if (options.map || options.reduce || options.filter) {
                         warn('Array operations will only be applied with list request type.');
                     }
                 }
