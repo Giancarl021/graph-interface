@@ -20,9 +20,29 @@ module.exports = function (path) {
         });
     }
 
+    function files(recursive = false, concatFolderName = false) {
+        return _readFiles(_path, path, recursive, concatFolderName);
+    }
+
+    function _readFiles(path, parent, recursive, concatFolderName) {
+        const r = [];
+        const items = fs.readdirSync(path);
+        for(const item of items) {
+            if(fs.lstatSync(`${path}/${item}`).isDirectory()) {
+                if(recursive) {
+                    r.push(..._readFiles(`${path}/${item}`, parent, recursive, concatFolderName));
+                }
+            } else {
+                r.push(`${concatFolderName ? parent + '/' : ''}${item}`);
+            }
+        }
+        return r;
+    }
+
     return {
         make,
         remove,
+        files,
         path: _path
     }
 }
