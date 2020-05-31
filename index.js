@@ -126,7 +126,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         }
 
         fillOptions(options, 'massive');
-        const cache = options.cache.expiresIn ? createCacheHandler(`.gphcache/${createHash(clientId + clientSecret + tenantId + url + JSON.stringify(options))}`) : null;
+        const cache = options.cache.expiresIn ? createCacheHandler(`.gphcache/${createHash(clientId + clientSecret + tenantId + urlPattern + JSON.stringify(options))}`) : null;
         if (cache && cache.hasCache()) {
             return responser.save(cache.getCache(), options);
         }
