@@ -216,7 +216,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             for (const key in response) {
                 let [j, l] = key.split('-');
                 for (; j <= l; j++) {
-                    if(!response[key]) {
+                    if (!response[key]) {
                         console.log('ERR: ' + key);
                         continue;
                     }
