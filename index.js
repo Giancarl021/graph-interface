@@ -120,12 +120,19 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
     }
 
     async function massive(urlPattern, values, options = defaultOptions.massive) {
-        request.requireOptions(options, ['type']);
-        if (!['unit', 'list'].includes(options.type)) {
-            throw new Error('The key "type" must have the value "unit" or "list"');
+        fillOptions(options, 'massive');
+
+        if (typeof options.requestsPerCycle !== 'number') {
+            throw new Error('Option requestPerCycle must be an valid number');
         }
 
-        fillOptions(options, 'massive');
+        if (typeof options.attempts !== 'number') {
+            throw new Error('Option attemps must be an valid number');
+        }
+
+        if (!['unit', 'list'].includes(options.type)) {
+            throw new Error('The key "type" must have the value "unit" or "list"');
+        }        
         const cache = options.cache.expiresIn ? createCacheHandler(`.gphcache/${createHash(clientId + clientSecret + tenantId + urlPattern + JSON.stringify(options))}`) : null;
         if (cache && cache.hasCache()) {
             return responser.save(cache.getCache(), options);
@@ -141,14 +148,6 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
 
         let fallback = [];
         let failures = 0;
-
-        if (typeof options.requestsPerCycle !== 'number') {
-            throw new Error('Option requestPerCycle must be an valid number');
-        }
-
-        if (typeof options.attempts !== 'number') {
-            throw new Error('Option attemps must be an valid number');
-        }
 
         let response = await request.cycle(
             getOptions,
