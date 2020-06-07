@@ -3,7 +3,7 @@ const createCacheHandler = require('./util/cache');
 const createResponseHandler = require('./util/response');
 const createObjectHandler = require('./util/object');
 const createHash = require('./util/hash');
-const createPatternParser = require('./util/pattern');
+
 const {
     defaultOptions,
     fillOptions
@@ -119,131 +119,6 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         return responser.save(response, options);
     }
 
-    async function massive(urlPattern, values, options = defaultOptions.massive) {
-        fillOptions(options, 'massive');
-
-        if (typeof options.requestsPerCycle !== 'number') {
-            throw new Error('Option requestPerCycle must be an valid number');
-        }
-
-        if (typeof options.attempts !== 'number') {
-            throw new Error('Option attemps must be an valid number');
-        }
-
-        if (!['unit', 'list'].includes(options.type)) {
-            throw new Error('The key "type" must have the value "unit" or "list"');
-        }        
-        const cache = options.cache.expiresIn ? createCacheHandler(`.gphcache/${createHash(clientId + clientSecret + tenantId + urlPattern + JSON.stringify(options))}`) : null;
-        if (cache && cache.hasCache()) {
-            return responser.save(cache.getCache(), options);
-        }
-
-        const pattern = createPatternParser(urlPattern, /{[^{}]*?}/g, /({|})*/g);
-        const urls = pattern.replaceArray(values);
-        if (!urls.length) return [];
-
-        const token = await getToken();
-        const getOptions = {};
-        const binder = buildRequests(urls, getOptions, values);
-
-        let fallback = [];
-        let failures = 0;
-
-        let response = await request.cycle(
-            getOptions,
-            options.requestsPerCycle,
-            fallback
-        );
-
-        while (fallback.length || (fallback.length && failures < options.attempts)) {
-            console.log('Fallback size: ' + fallback.length, fallback);
-            const temp = [];
-            const o = {};
-            buildRequests(fallback, o, values, binder);
-            response = {
-                ...response,
-                ...await request.cycle(
-                    o,
-                    options.requestsPerCycle,
-                    temp
-                )
-            };
-            if (fallback.length === temp.length) failures++;
-            fallback = temp;
-        }
-
-        require('fs').writeFileSync('responses/mid.json', JSON.stringify(response, null, 4));
-
-        response = buildResponses(response, options.type, values, binder);
-
-        if (cache) {
-            cache.setCache(response, options.cache.expiresIn);
-        }
-        return responser.save(response, options);
-
-        function buildRequests(urls, destination, values, bind = null) {
-            const keys = Object.keys(values);
-            const binder = bind || keys[Math.floor(Math.random() * keys.length)];
-            const ids = values[binder];
-            const chunk = 20;
-            const requests = urls.map((url, i) => ({
-                url,
-                method: options.method,
-                id: ids[i]
-            }));
-
-            for (let i = 0; i < urls.length; i += chunk) {
-                destination[`${i}-${Math.min(i + chunk, urls.length) - 1}`] = {
-                    url: `${endpoint}/$batch`,
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        requests: requests.slice(i, Math.min(i + chunk, urls.length))
-                    })
-                };
-            }
-
-            return binder;
-        }
-
-        function buildResponses(response, type, values, binder) {
-            const r = {};
-            const keys = values[binder];
-            for (const key in response) {
-                let [j, l] = key.split('-');
-                for (; j <= l; j++) {
-                    if (!response[key]) {
-                        console.log('ERR: ' + key);
-                        continue;
-                    }
-                    const item = response[key].responses.find(item => item.id === keys[j]);
-                    const temp = item && item.body ? item.body : null;
-                    if (temp && temp.error) {
-                        warn('Request Error: ' + key + ':' + keys[j]);
-                        continue;
-                    }
-                    r[keys[j]] = type === 'unit' ? temp || null : (temp && temp.value ? temp.value : []);
-
-                    if (options.type === 'list') {
-                        if (Array.isArray(r[keys[j]])) {
-                            if (options.filter) r[keys[j]] = r[keys[j]].filter(options.filter);
-                            if (options.map) r[keys[j]] = r[keys[j]].map(options.map);
-                            if (options.reduce) r[keys[j]] = r[keys[j]].reduce(options.reduce);
-                        } else {
-                            warn('Response is not an Array, please verify if you are using the correct request or method.');
-                        }
-                    } else if (options.map || options.reduce || options.filter) {
-                        warn('Array operations will only be applied with list request type.');
-                    }
-                }
-            }
-            return r;
-        }
-    }
-
     function warn(message) {
         if (!mainOptions.supressWarnings) {
             console.warn('[!] Warning: ' + message);
@@ -253,7 +128,6 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
     return {
         getToken,
         unit,
-        list,
-        massive
+        list
     }
 }
