@@ -25,11 +25,13 @@ const defaultOptions = {
             },
             redis: {
                 host: '127.0.0.1',
-                port: 6379
+                port: 6379,
+                family: 'IPv4',
+                db: null,
+                password: null,
+                url: null,
+                path: null
             }
-        },
-        cache: {
-            cleanupInterval: 3600
         }
     },
     token: {
