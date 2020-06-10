@@ -52,11 +52,11 @@ function requireParams(source, params) {
     const missing = [];
     const r = {};
     for (const param of params) {
-        const [a, b] = alias(param);
-        if (!source[a] && !source[b]) {
-            missing.push(a);
+        const [a, b, c] = alias(param);
+        if (!source[a] && !source[b] && !source[c]) {
+            missing.push(b);
         } else {
-            r[b] = source[a] || source[b];
+            r[b] = source[a] || source[b] || source[c];
         }
     }
 
@@ -69,7 +69,8 @@ function requireParams(source, params) {
     function alias(param) {
         return [
             param,
-            param.split('-').map((w, i) => i === 0 ? w : w.slice(0, 1).toUpperCase() + w.slice(1).toLowerCase()).join('')
+            param.split('-').map((w, i) => i === 0 ? w : w.slice(0, 1).toUpperCase() + w.slice(1).toLowerCase()).join(''),
+            param.replace(/-/g, '_'),
         ]
     }
 }

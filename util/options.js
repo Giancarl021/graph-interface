@@ -2,8 +2,8 @@ const subDefault = {
     saveOn: null,
     method: 'GET',
     cache: {
-       expiresIn: null
-   }
+        expiresIn: null
+    }
 }
 
 const listDefault = {
@@ -15,10 +15,23 @@ const listDefault = {
 const defaultOptions = {
     main: {
         version: 'v1.0',
-        tokenCache: true,
         supressWarnings: false,
         cache: {
-            cleanupInterval: 3600
+            type: null,
+            tokenCache: true,
+            fs: {
+                cleanupInterval: 3600,
+                path: '.gphcache',
+            },
+            redis: {
+                host: '127.0.0.1',
+                port: 6379,
+                family: 'IPv4',
+                db: null,
+                password: null,
+                url: null,
+                path: null
+            }
         }
     },
     token: {
@@ -54,5 +67,6 @@ function fillOptions(options, filler) {
 
 module.exports = {
     defaultOptions,
+    serviceOptions,
     fillOptions
 };
