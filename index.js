@@ -1,5 +1,5 @@
 const createRequestHandler = require('./util/request');
-const createCacheHandler = require('./util/cache');
+const createCacheInterface = require('./services/cache');
 const createResponseHandler = require('./util/response');
 const createObjectHandler = require('./util/object');
 const createHash = require('./util/hash');
@@ -20,7 +20,9 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         clientSecret
     } = request.requireParams(credentials, ['tenant-id', 'client-id', 'client-secret']);
 
-    const tokenCache = createCacheHandler(`.gphcache/${createHash(clientId + clientSecret + tenantId)}`, mainOptions.cache.cleanupInterval);
+    const createCacheHandler = createCacheInterface(mainOptions.cache);
+
+    const tokenCache = createCacheHandler(createHash(clientId + clientSecret + tenantId));
 
     async function getToken(options = defaultOptions.token) {
         fillOptions(options, 'token');
@@ -38,13 +40,13 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             }
         };
 
-        if (mainOptions.tokenCache && tokenCache.hasCache()) {
-            return responser.save(tokenCache.getCache().access_token, options);
+        if (mainOptions.cache.tokenCache && tokenCache.exists()) {
+            return responser.save(tokenCache.get().access_token, options);
         } else {
             const response = await request.get(getOptions);
             request.catchResponse(response);
-            if (mainOptions.tokenCache) {
-                tokenCache.setCache(response, response.expires_in);
+            if (mainOptions.cache.tokenCache) {
+                tokenCache.set(response, response.expires_in);
             }
             return responser.save(response.access_token, options);
         }
@@ -52,9 +54,9 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
 
     async function unit(url, options = defaultOptions.unit) {
         fillOptions(options, 'unit');
-        const cache = options.cache.expiresIn ? createCacheHandler(`.gphcache/${createHash(clientId + clientSecret + tenantId + url + JSON.stringify(options))}`) : null;
-        if (cache && cache.hasCache()) {
-            return responser.save(cache.getCache(), options);
+        const cache = options.cache.expiresIn ? createCacheHandler(createHash(clientId + clientSecret + tenantId + url + JSON.stringify(options))) : null;
+        if (cache && cache.exists()) {
+            return responser.save(cache.get(), options);
         }
 
         const token = await getToken();
@@ -83,16 +85,16 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         }
 
         if (cache) {
-            cache.setCache(response, options.cache.expiresIn);
+            cache.set(response, options.cache.expiresIn);
         }
         return responser.save(response, options);
     }
 
     async function list(url, options = defaultOptions.list) {
         fillOptions(options, 'list');
-        const cache = options.cache.expiresIn ? createCacheHandler(`.gphcache/${createHash(clientId + clientSecret + tenantId + url + JSON.stringify(options))}`) : null;
-        if (cache && cache.hasCache()) {
-            return responser.save(cache.getCache(), options);
+        const cache = options.cache.expiresIn ? createCacheHandler(createHash(clientId + clientSecret + tenantId + url + JSON.stringify(options))) : null;
+        if (cache && cache.exists()) {
+            return responser.save(cache.get(), options);
         }
         const token = await getToken();
         const getOptions = {
@@ -114,7 +116,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         }
 
         if (cache) {
-            cache.setCache(response, options.cache.expiresIn);
+            cache.set(response, options.cache.expiresIn);
         }
         return responser.save(response, options);
     }
@@ -133,9 +135,9 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         if (!['unit', 'list'].includes(options.type)) {
             throw new Error('The key "type" must have the value "unit" or "list"');
         }        
-        const cache = options.cache.expiresIn ? createCacheHandler(`.gphcache/${createHash(clientId + clientSecret + tenantId + urlPattern + JSON.stringify(options))}`) : null;
-        if (cache && cache.hasCache()) {
-            return responser.save(cache.getCache(), options);
+        const cache = options.cache.expiresIn ? createCacheHandler(createHash(clientId + clientSecret + tenantId + urlPattern + JSON.stringify(options))) : null;
+        if (cache && cache.exists()) {
+            return responser.save(cache.get(), options);
         }
 
         const pattern = createPatternParser(urlPattern, /{[^{}]*?}/g, /({|})*/g);
@@ -177,7 +179,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         response = buildResponses(response, options.type, values, binder);
 
         if (cache) {
-            cache.setCache(response, options.cache.expiresIn);
+            cache.set(response, options.cache.expiresIn);
         }
         return responser.save(response, options);
 
