@@ -13,5 +13,8 @@
   "dependencies": {
     "redis": "^3.0.2",
     "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "dotenv": "^8.2.0"
   }
 }

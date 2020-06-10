@@ -2,7 +2,7 @@
 .gphcache/
 
 # Local files
-*.spec.js
+*.env
 responses/**/*
 
 # Logs
