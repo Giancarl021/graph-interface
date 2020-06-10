@@ -8,19 +8,22 @@ module.exports = function (urls, token, binder, endpoint, method, parseMode, war
     } = createRequestHandler();
 
     async function request() {
-        const binding = bind();
-        const packages = pack(binding);
-        const r = {};
+        // const binding = bind();
+        // const packages = pack(binding);
+        // const r = {};
         // for(const key in packages) {
         //     const package = packages[key];
-        //     r[package]
+        //     r[key] = {
+
+        //     }
         // }
+
         console.log(
             unpack(
                 await get(
                     pack(
                         bind()
-                    )
+                    )['0-20']
                 )
             )
         );

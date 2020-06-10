@@ -44,6 +44,8 @@ async function main() {
         id: users.map(user => user.id)
     }, {
         map: license => license.skuPartNumber,
+        binder: 'id',
+        type: 'list'
         // cache: {
         //     expiresIn: ttl
         // }
