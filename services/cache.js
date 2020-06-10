@@ -19,6 +19,5 @@ module.exports = function (options) {
     const index = options.type;
     const parameters = options[index];
     const interface = interfaces[index](parameters);
-
     return interface;
 }

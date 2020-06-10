@@ -22,10 +22,9 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
 
     const createCacheHandler = createCacheInterface(mainOptions.cache);
 
-    const tokenCache = createCacheHandler(createHash(clientId + clientSecret + tenantId));
-
     async function getToken(options = defaultOptions.token) {
         fillOptions(options, 'token');
+        const cache = await createCacheHandler(createHash(clientId + clientSecret + tenantId));
         const getOptions = {
             method: 'POST',
             url: `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
@@ -40,13 +39,13 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             }
         };
 
-        if (mainOptions.cache.tokenCache && tokenCache.exists()) {
-            return responser.save(tokenCache.get().access_token, options);
+        if (mainOptions.cache.tokenCache && await cache.exists()) {
+            return responser.save(await cache.get().access_token, options);
         } else {
             const response = await request.get(getOptions);
             request.catchResponse(response);
             if (mainOptions.cache.tokenCache) {
-                tokenCache.set(response, response.expires_in);
+                await cache.set(response, response.expires_in);
             }
             return responser.save(response.access_token, options);
         }
@@ -54,9 +53,9 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
 
     async function unit(url, options = defaultOptions.unit) {
         fillOptions(options, 'unit');
-        const cache = options.cache.expiresIn ? createCacheHandler(createHash(clientId + clientSecret + tenantId + url + JSON.stringify(options))) : null;
-        if (cache && cache.exists()) {
-            return responser.save(cache.get(), options);
+        const cache = options.cache.expiresIn ? await createCacheHandler(createHash(clientId + clientSecret + tenantId + url + JSON.stringify(options))) : null;
+        if (cache && await cache.exists()) {
+            return responser.save(await cache.get(), options);
         }
 
         const token = await getToken();
@@ -85,16 +84,16 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         }
 
         if (cache) {
-            cache.set(response, options.cache.expiresIn);
+            await cache.set(response, options.cache.expiresIn);
         }
         return responser.save(response, options);
     }
 
     async function list(url, options = defaultOptions.list) {
         fillOptions(options, 'list');
-        const cache = options.cache.expiresIn ? createCacheHandler(createHash(clientId + clientSecret + tenantId + url + JSON.stringify(options))) : null;
-        if (cache && cache.exists()) {
-            return responser.save(cache.get(), options);
+        const cache = options.cache.expiresIn ? await createCacheHandler(createHash(clientId + clientSecret + tenantId + url + JSON.stringify(options))) : null;
+        if (cache && await cache.exists()) {
+            return responser.save(await cache.get(), options);
         }
         const token = await getToken();
         const getOptions = {
@@ -116,7 +115,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         }
 
         if (cache) {
-            cache.set(response, options.cache.expiresIn);
+            await cache.set(response, options.cache.expiresIn);
         }
         return responser.save(response, options);
     }
@@ -135,9 +134,9 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         if (!['unit', 'list'].includes(options.type)) {
             throw new Error('The key "type" must have the value "unit" or "list"');
         }        
-        const cache = options.cache.expiresIn ? createCacheHandler(createHash(clientId + clientSecret + tenantId + urlPattern + JSON.stringify(options))) : null;
-        if (cache && cache.exists()) {
-            return responser.save(cache.get(), options);
+        const cache = options.cache.expiresIn ? await createCacheHandler(createHash(clientId + clientSecret + tenantId + urlPattern + JSON.stringify(options))) : null;
+        if (cache && await cache.exists()) {
+            return responser.save(await cache.get(), options);
         }
 
         const pattern = createPatternParser(urlPattern, /{[^{}]*?}/g, /({|})*/g);
@@ -159,19 +158,19 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
 
         while (fallback.length || (fallback.length && failures < options.attempts)) {
             console.log('Fallback size: ' + fallback.length, fallback);
-            const temp = [];
-            const o = {};
-            buildRequests(fallback, o, values, binder);
-            response = {
-                ...response,
-                ...await request.cycle(
-                    o,
-                    options.requestsPerCycle,
-                    temp
-                )
-            };
-            if (fallback.length === temp.length) failures++;
-            fallback = temp;
+            // const temp = [];
+            // const o = {};
+            // buildRequests(fallback, o, values, binder);
+            // response = {
+            //     ...response,
+            //     ...await request.cycle(
+            //         o,
+            //         options.requestsPerCycle,
+            //         temp
+            //     )
+            // };
+            // if (fallback.length === temp.length) failures++;
+            // fallback = temp;
         }
 
         require('fs').writeFileSync('responses/mid.json', JSON.stringify(response, null, 4));
@@ -179,7 +178,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         response = buildResponses(response, options.type, values, binder);
 
         if (cache) {
-            cache.set(response, options.cache.expiresIn);
+            await cache.set(response, options.cache.expiresIn);
         }
         return responser.save(response, options);
 
@@ -221,6 +220,7 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
                         console.log('ERR: ' + key);
                         continue;
                     }
+
                     const item = response[key].responses.find(item => item.id === keys[j]);
                     const temp = item && item.body ? item.body : null;
                     if (temp && temp.error) {

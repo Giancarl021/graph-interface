@@ -69,7 +69,17 @@ function fillOptions(options, filler) {
     }
 }
 
+function nullifyOptions(options) {
+    const r = { ...options };
+    for (const key in r) {
+        if(r[key] === null) delete r[key];
+    }
+
+    return r;
+}
+
 module.exports = {
     defaultOptions,
-    fillOptions
+    fillOptions,
+    nullifyOptions
 };

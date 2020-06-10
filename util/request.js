@@ -57,6 +57,9 @@ async function cycle(map, pulse, fallback) {
                 })
         });
 
+        // console.log(await r[key]);
+        // process.exit(0);
+
         if(object.size() % pulse === 0) {
             await object.awaitAll();
         }
