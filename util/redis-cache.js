@@ -7,12 +7,17 @@ const {
     promisify
 } = require('util');
 
-module.exports = function (options) {
+module.exports = async function (options) {
     const client = redis.createClient(nullifyOptions(options));
 
-    client.on('error', err => {
+    try {
+        await new Promise((resolve, reject) => {
+            client.on('error', reject);
+            client.on('ready', resolve);
+        });
+    } catch (err) {
         throw new Error('Redis connection error: ' + err.message);
-    });
+    }
 
     const getAsync = promisify(client.get).bind(client);
     const setAsync = promisify(client.set).bind(client);

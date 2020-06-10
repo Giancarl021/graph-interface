@@ -9,7 +9,7 @@ const {
     fillOptions
 } = require('./util/options');
 
-module.exports = function (credentials, mainOptions = defaultOptions.main) {
+module.exports = async function (credentials, mainOptions = defaultOptions.main) {
     fillOptions(mainOptions, 'main');
     const endpoint = `https://graph.microsoft.com/${mainOptions.version}`;
     const request = createRequestHandler();
@@ -19,8 +19,13 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         clientId,
         clientSecret
     } = request.requireParams(credentials, ['tenant-id', 'client-id', 'client-secret']);
-
-    const createCacheHandler = createCacheInterface(mainOptions.cache);
+    
+    let createCacheHandler;
+    try {
+        createCacheHandler = await createCacheInterface(mainOptions.cache);
+    } catch (err) {
+        throw err;
+    }
 
     async function getToken(options = defaultOptions.token) {
         fillOptions(options, 'token');
