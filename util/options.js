@@ -51,6 +51,7 @@ const defaultOptions = {
         ...subDefault,
         ...listDefault,
         attempts: 3,
+        binder: null,
         requestsPerCycle: 50,
         type: null
     }
