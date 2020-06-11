@@ -45,15 +45,13 @@ async function main() {
     }, {
         map: license => license.skuPartNumber,
         binder: 'id',
-        type: 'list'
-        // cache: {
-        //     expiresIn: ttl
-        // }
+        type: 'list',
+        cache: {
+            expiresIn: ttl
+        }
     });
 
     console.log(require('./util/object')(licenses).size() + ' licenses retrived');
-
-    process.exit(0);
 
     console.log('Binding licenses...');
     for(let i = 0; i < users.length; i++) {
@@ -63,7 +61,7 @@ async function main() {
 
     console.log('Saving response...');
 
-    require('./util/json')(`responses/${tenant}$${Date.now()}`).save(users);
+    require('./util/json')(`responses/${Date.now()}`).save(users);
 
     console.log('Response built');
 }

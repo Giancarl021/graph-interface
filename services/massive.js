@@ -2,31 +2,34 @@ const createRequestHandler = require('../util/request');
 
 const CHUNK_SIZE = 20;
 
-module.exports = function (urls, token, binder, endpoint, method, parseMode, warn) {
+module.exports = function (urls, token, binder, endpoint, method, parseMode) {
     const {
-        get
+        cycle
     } = createRequestHandler();
 
     async function request() {
-        // const binding = bind();
-        // const packages = pack(binding);
-        // const r = {};
-        // for(const key in packages) {
-        //     const package = packages[key];
-        //     r[key] = {
+        const binding = bind();
+        const packages = pack(binding);
+        let r = {};
+        let i = 1;
+        const l = require('../util/object')(packages).size();
+        for (const key in packages) {
+            const package = packages[key];
+            const n = ((x, y) => {
+                let r = '';
+                let l = Math.ceil(Math.log10(y));
+                for (let i = x.toString().length; i < l; i++) r += '0';
+                return r + x;
+            })(i++, l);
+            console.log(`Package [${n}/${l}]`);
+            const response = await get(package);
+            r = {
+                ...r,
+                ...unpack(response)
+            };
+        }
 
-        //     }
-        // }
-
-        console.log(
-            unpack(
-                await get(
-                    pack(
-                        bind()
-                    )['0-20']
-                )
-            )
-        );
+        return r;
     }
 
     function retry(times) {
@@ -62,9 +65,7 @@ module.exports = function (urls, token, binder, endpoint, method, parseMode, war
         return r;
     }
 
-    function unpack({
-        responses
-    }) {
+    function unpack({ responses }) {
         const r = {};
         if (!responses) {
             throw new Error('Cluster error');
