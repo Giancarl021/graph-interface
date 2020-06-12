@@ -2,8 +2,9 @@ const createRequestHandler = require('../util/request');
 
 const CHUNK_SIZE = 20;
 
-module.exports = function (urls, token, binder, endpoint, method, parseMode, requestsPerCycle, requestMode, cycleAttempts) {
+module.exports = function (urls, token, binder, endpoint, method, parseMode, requestsPerCycle, requestMode, maxAttempts) {
     const requester = createRequestHandler();
+    let attemps = 0;
     async function request() {
         const binding = bind();
         const packages = pack(binding);
@@ -17,9 +18,7 @@ module.exports = function (urls, token, binder, endpoint, method, parseMode, req
         const fall = [];
         let r = {};
         if (asyncMode) {
-            console.log('async');
             const responses = await requester.cycle(packages, requestsPerCycle);
-            console.log('Processing...');
             for(const key in responses) {
                 const response = responses[key];
                 const { resolved, rejected } = unpack(response && response.responses);
@@ -48,13 +47,19 @@ module.exports = function (urls, token, binder, endpoint, method, parseMode, req
             }
         }
 
-        console.log(fall);
+        console.log('Fail size: ' + fall.length);
+        if(fall.length) {
+            r = {
+                ...r,
+                ...(await retry(fall, asyncMode))
+            };
+        }
 
         return r;
     }
 
-    function bind() {
-        return urls.map((url, i) => ({
+    function bind(_urls = urls) {
+        return _urls.map((url, i) => ({
             url,
             method,
             id: binder[i]
@@ -106,13 +111,23 @@ module.exports = function (urls, token, binder, endpoint, method, parseMode, req
         };
     }
 
+    async function retry(rejections, asyncMode) {
+        const binding = bind(rejections);
+        const packages = pack(binding);
+
+        const response = await get(packages, asyncMode);
+        return response;
+    }
+
     function handleRejections(rejections, packages, packageKey) {
         const package = packages[packageKey];
         const requests = JSON.parse(package.body).requests.map(request => request.url);
         const r = [];
         if (rejections === 'all') {
+            console.log('Cluster rejection');
             r.push(...requests);
         } else if (typeof rejected === 'object') {
+            console.log('Inner rejections');
             for(const key in rejections) {
                 const rejection = rejections[key];
                 console.log(rejection);
