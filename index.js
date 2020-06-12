@@ -129,19 +129,19 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
     async function massive(urlPattern, values, options = defaultOptions.massive) {
         fillOptions(options, 'massive');
 
-        if(!values || typeof values !== 'object' || Array.isArray(values)) {
+        if (!values || typeof values !== 'object' || Array.isArray(values)) {
             throw new Error('Values parameter must be an valid object');
         }
 
-        if (typeof options.requestsPerCycle !== 'number') {
+        if (typeof options.cycle.requests !== 'number') {
             throw new Error('Option requestPerCycle must be an valid number');
         }
 
-        if (typeof options.attempts !== 'number') {
-            throw new Error('Option attemps must be an valid number');
+        if (typeof options.cycle.attempts !== 'number') {
+            throw new Error('Option attempts must be an valid number');
         }
 
-        if(!options.binder || !values.hasOwnProperty(options.binder)) {
+        if (!options.binder || !values.hasOwnProperty(options.binder)) {
             throw new Error('Option binder must be an key of values object');
         }
 
@@ -159,7 +159,17 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
 
         const token = await getToken();
 
-        const requester = createMassiveRequestHandler(urls, token, values[options.binder], endpoint, options.method, options.type, warn);
+        const requester = createMassiveRequestHandler(
+            urls,
+            token,
+            values[options.binder],
+            endpoint,
+            options.method,
+            options.type,
+            options.cycle.requests,
+            options.cycle.async,
+            options.cycle.attempts
+        );
 
         const response = await requester.request();
 

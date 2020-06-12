@@ -2,38 +2,55 @@ const createRequestHandler = require('../util/request');
 
 const CHUNK_SIZE = 20;
 
-module.exports = function (urls, token, binder, endpoint, method, parseMode) {
-    const {
-        cycle
-    } = createRequestHandler();
-
+module.exports = function (urls, token, binder, endpoint, method, parseMode, requestsPerCycle, requestMode, cycleAttempts) {
+    const requester = createRequestHandler();
     async function request() {
         const binding = bind();
         const packages = pack(binding);
-        let r = {};
-        let i = 1;
-        const l = require('../util/object')(packages).size();
-        for (const key in packages) {
-            const package = packages[key];
-            const n = ((x, y) => {
-                let r = '';
-                let l = Math.ceil(Math.log10(y));
-                for (let i = x.toString().length; i < l; i++) r += '0';
-                return r + x;
-            })(i++, l);
-            console.log(`Package [${n}/${l}]`);
-            const response = await get(package);
-            r = {
-                ...r,
-                ...unpack(response)
-            };
-        }
 
-        return r;
+        const response = await get(packages, requestMode);
+
+        return response;
     }
 
-    function retry(times) {
+    async function get(packages, asyncMode) {
+        const fall = [];
+        let r = {};
+        if (asyncMode) {
+            console.log('async');
+            const responses = await requester.cycle(packages, requestsPerCycle);
+            console.log('Processing...');
+            for(const key in responses) {
+                const response = responses[key];
+                const { resolved, rejected } = unpack(response && response.responses);
+                fall.push(
+                    ...handleRejections(rejected, packages, key)
+                );
+                r = {
+                    ...r,
+                    ...resolved
+                };
+            }
+        } else {
+            for (const key in packages) {
+                const package = packages[key];
+                const response = await requester.get(package);
+                const { resolved, rejected } = unpack(response && response.responses);
 
+                fall.push(
+                    ...handleRejections(rejected, packages, key)
+                );
+
+                r = {
+                    ...r,
+                    ...resolved
+                };
+            }
+        }
+
+        console.log(fall);
+
+        return r;
     }
 
     function bind() {
@@ -65,19 +82,43 @@ module.exports = function (urls, token, binder, endpoint, method, parseMode) {
         return r;
     }
 
-    function unpack({ responses }) {
-        const r = {};
+    function unpack(responses) {
+        const resolved = {};
+        const rejected = {};
         if (!responses) {
-            throw new Error('Cluster error');
+            return {
+                resolved: null,
+                rejected: 'all'
+            };
         }
         for (const response of responses) {
             // Create pagination for each list response
             if (response.body.error) {
-                throw new Error(response.body.error);
+                rejected[response.id] = response;
+                continue;
             }
-            r[response.id] = parseMode === 'unit' ? response.body || null : response.body.value || [];
+            resolved[response.id] = parseMode === 'unit' ? response.body || null : response.body.value || [];
         }
 
+        return {
+            resolved,
+            rejected
+        };
+    }
+
+    function handleRejections(rejections, packages, packageKey) {
+        const package = packages[packageKey];
+        const requests = JSON.parse(package.body).requests.map(request => request.url);
+        const r = [];
+        if (rejections === 'all') {
+            r.push(...requests);
+        } else if (typeof rejected === 'object') {
+            for(const key in rejections) {
+                const rejection = rejections[key];
+                console.log(rejection);
+                r.push(requests.find(url => url.includes(key)));
+            }
+        }
         return r;
     }
 

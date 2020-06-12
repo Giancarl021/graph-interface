@@ -43,7 +43,7 @@ async function pagination(getOptions, limit = null, offset = null) {
     }
 }
 
-async function cycle(map, pulse, fallback) {
+async function cycle(map, pulse) {
     let r = {};
     const object = createObjectHandler(r);
     for (const key in map) {
@@ -51,20 +51,16 @@ async function cycle(map, pulse, fallback) {
         r[key] = new Promise(resolve => {
             get(options)
                 .then(resolve)
-                .catch(() => {
-                    fallback.push(key);
-                    resolve(null);
-                })
+                .catch(() => resolve(null))
         });
 
-        // console.log(await r[key]);
-        // process.exit(0);
-
         if(object.size() % pulse === 0) {
+            console.log(`Awaiting [${object.size()}/${Object.keys(map).length}]`);
             await object.awaitAll();
         }
     }
-
+    
+    console.log(`Awaiting [${object.size()}/${Object.keys(map).length}]`);
     await object.awaitAll();
 
     return r;

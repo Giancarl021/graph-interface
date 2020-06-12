@@ -50,9 +50,12 @@ const defaultOptions = {
     massive: {
         ...subDefault,
         ...listDefault,
-        attempts: 3,
         binder: null,
-        requestsPerCycle: 50,
+        cycle: {
+            attempts: 3,
+            async: true,
+            requests: 50
+        },
         type: null
     }
 };

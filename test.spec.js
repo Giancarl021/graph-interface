@@ -46,8 +46,11 @@ async function main() {
         map: license => license.skuPartNumber,
         binder: 'id',
         type: 'list',
+        cycle: {
+            async: true
+        },
         cache: {
-            expiresIn: ttl
+            // expiresIn: ttl
         }
     });
 
