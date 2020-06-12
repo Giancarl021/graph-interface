@@ -49,9 +49,11 @@ module.exports = function (urls, token, binder, endpoint, method, parseMode, req
 
         console.log('Fail size: ' + fall.length);
         if(fall.length) {
+            const attempt = await retry(fall, asyncMode);
+            console.log(attempt);
             r = {
                 ...r,
-                ...(await retry(fall, asyncMode))
+                ...attempt
             };
         }
 
@@ -98,7 +100,7 @@ module.exports = function (urls, token, binder, endpoint, method, parseMode, req
         }
         for (const response of responses) {
             // Create pagination for each list response
-            if (response.body.error) {
+            if (response.body.error) { // Error here
                 rejected[response.id] = response;
                 continue;
             }
@@ -126,8 +128,8 @@ module.exports = function (urls, token, binder, endpoint, method, parseMode, req
         if (rejections === 'all') {
             console.log('Cluster rejection');
             r.push(...requests);
-        } else if (typeof rejected === 'object') {
-            console.log('Inner rejections');
+        } else {
+            // Error in get rejections
             for(const key in rejections) {
                 const rejection = rejections[key];
                 console.log(rejection);
