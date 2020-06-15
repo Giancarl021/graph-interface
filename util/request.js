@@ -55,12 +55,10 @@ async function cycle(map, pulse) {
         });
 
         if(object.size() % pulse === 0) {
-            console.log(`Awaiting [${object.size()}/${Object.keys(map).length}]`);
             await object.awaitAll();
         }
     }
     
-    console.log(`Awaiting [${object.size()}/${Object.keys(map).length}]`);
     await object.awaitAll();
 
     return r;

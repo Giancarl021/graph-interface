@@ -4,9 +4,8 @@ const CHUNK_SIZE = 20;
 
 module.exports = function (urls, token, binder, endpoint, method, parseMode, requestsPerCycle, requestMode, maxAttempts) {
     const requester = createRequestHandler();
-    let attemps = 0;
     async function request() {
-        const binding = bind();
+        const binding = bind(urls);
         const packages = pack(binding);
 
         const response = await get(packages, requestMode);
@@ -16,7 +15,7 @@ module.exports = function (urls, token, binder, endpoint, method, parseMode, req
 
     async function get(packages, asyncMode) {
         const fall = [];
-        let r = {};
+        const r = {};
         if (asyncMode) {
             const responses = await requester.cycle(packages, requestsPerCycle);
             for(const key in responses) {
@@ -25,10 +24,7 @@ module.exports = function (urls, token, binder, endpoint, method, parseMode, req
                 fall.push(
                     ...handleRejections(rejected, packages, key)
                 );
-                r = {
-                    ...r,
-                    ...resolved
-                };
+                setR(resolved);
             }
         } else {
             for (const key in packages) {
@@ -40,31 +36,29 @@ module.exports = function (urls, token, binder, endpoint, method, parseMode, req
                     ...handleRejections(rejected, packages, key)
                 );
 
-                r = {
-                    ...r,
-                    ...resolved
-                };
+                setR(resolved);
             }
         }
 
-        console.log('Fail size: ' + fall.length);
         if(fall.length) {
-            const attempt = await retry(fall, asyncMode);
-            console.log(attempt);
-            r = {
-                ...r,
-                ...attempt
-            };
+            const response =  await get(pack(bind(fall)), asyncMode);
+            setR(response);
         }
 
         return r;
+
+        function setR(items) {
+            for(const key in items) {
+                r[key] = items[key];
+            }
+        }
     }
 
-    function bind(_urls = urls) {
-        return _urls.map((url, i) => ({
+    function bind(urls) {
+        return urls.map(url => ({
             url,
             method,
-            id: binder[i]
+            id: binder[url]
         }));
     }
 
@@ -113,26 +107,14 @@ module.exports = function (urls, token, binder, endpoint, method, parseMode, req
         };
     }
 
-    async function retry(rejections, asyncMode) {
-        const binding = bind(rejections);
-        const packages = pack(binding);
-
-        const response = await get(packages, asyncMode);
-        return response;
-    }
-
     function handleRejections(rejections, packages, packageKey) {
         const package = packages[packageKey];
         const requests = JSON.parse(package.body).requests.map(request => request.url);
         const r = [];
         if (rejections === 'all') {
-            console.log('Cluster rejection');
             r.push(...requests);
         } else {
-            // Error in get rejections
             for(const key in rejections) {
-                const rejection = rejections[key];
-                console.log(rejection);
                 r.push(requests.find(url => url.includes(key)));
             }
         }

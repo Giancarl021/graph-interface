@@ -159,10 +159,15 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
 
         const token = await getToken();
 
+        const binder = {};
+
+        let i = 0;
+        for(const url of urls) binder[url] = values[options.binder][i++];
+
         const requester = createMassiveRequestHandler(
             urls,
             token,
-            values[options.binder],
+            binder,
             endpoint,
             options.method,
             options.type,

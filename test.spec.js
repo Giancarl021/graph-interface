@@ -2,7 +2,6 @@ require('dotenv').config();
 
 const createGraphInterface = require('./index');
 
-
 const credentials = {
     tenant_id: process.env.TENANT_ID,
     client_id: process.env.CLIENT_ID,
@@ -47,7 +46,8 @@ async function main() {
         binder: 'id',
         type: 'list',
         cycle: {
-            async: true
+            async: true,
+            requests: 200
         },
         cache: {
             // expiresIn: ttl
@@ -71,6 +71,4 @@ async function main() {
 
 main()
     .catch(console.error)
-    .finally(() => {
-        process.exit(0)
-    })
+    .finally(() => process.exit(0));
