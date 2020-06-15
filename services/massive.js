@@ -3,6 +3,8 @@ const createRequestHandler = require('../util/request');
 const CHUNK_SIZE = 20;
 
 module.exports = function (urls, token, binder, endpoint, method, parseMode, requestsPerCycle, requestMode, maxAttempts) {
+    let attempts = 0;
+    let fallSize = 0;
     const requester = createRequestHandler();
     async function request() {
         const binding = bind(urls);
@@ -41,6 +43,9 @@ module.exports = function (urls, token, binder, endpoint, method, parseMode, req
         }
 
         if(fall.length) {
+            if(fallSize === fall.length) attempts++;
+            if(attempts >= maxAttempts) throw new Error('Max attempts tried');
+            fallSize = fall.length;
             const response =  await get(pack(bind(fall)), asyncMode);
             setR(response);
         }

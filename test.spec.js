@@ -42,7 +42,7 @@ async function main() {
     const licenses = await graph.massive('users/{id}/licenseDetails?$select=skuPartNumber', {
         id: users.map(user => user.id)
     }, {
-        map: license => license.skuPartNumber,
+        // map: license => license.skuPartNumber,
         binder: 'id',
         type: 'list',
         cycle: {
