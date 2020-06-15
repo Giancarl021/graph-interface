@@ -1,8 +1,9 @@
 const createRequestHandler = require('../util/request');
+const createGraphInterface = require('../index');
 
 const CHUNK_SIZE = 20;
 
-module.exports = function (urls, token, binder, endpoint, method, parseMode, requestsPerCycle, requestMode, maxAttempts) {
+module.exports = function (urls, token, binder, endpoint, method, parseMode, parseModeOptions, requestsPerCycle, requestMode, maxAttempts, unit, list) {
     let attempts = 0;
     let fallSize = 0;
     const requester = createRequestHandler();
@@ -98,8 +99,7 @@ module.exports = function (urls, token, binder, endpoint, method, parseMode, req
             };
         }
         for (const response of responses) {
-            // Create pagination for each list response
-            if (response.body.error) { // Error here
+            if (response.body.error) {
                 rejected[response.id] = response;
                 continue;
             }

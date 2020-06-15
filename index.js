@@ -171,9 +171,12 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
             endpoint,
             options.method,
             options.type,
+            options.typeOptions,
             options.cycle.requests,
             options.cycle.async,
-            options.cycle.attempts
+            options.cycle.attempts,
+            unit,
+            list
         );
 
         const response = await requester.request();

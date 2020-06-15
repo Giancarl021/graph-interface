@@ -49,14 +49,19 @@ const defaultOptions = {
     },
     massive: {
         ...subDefault,
-        ...listDefault,
         binder: null,
         cycle: {
             attempts: 3,
             async: true,
             requests: 50
         },
-        type: null
+        type: null,
+        typeOptions: {
+            ...listDefault,
+            limit: null,
+            offset: null,
+            fields: []
+        }
     }
 };
 
@@ -65,7 +70,7 @@ function fillOptions(options, filler) {
     for (const key in f) {
         if (!options.hasOwnProperty(key)) {
             options[key] = f[key];
-        } else if(typeof f[key] === 'object') {
+        } else if (typeof f[key] === 'object') {
             const obj = options[key];
             fillOptions(obj, f[key]);
             options[key] = obj;
@@ -74,9 +79,11 @@ function fillOptions(options, filler) {
 }
 
 function nullifyOptions(options) {
-    const r = { ...options };
+    const r = {
+        ...options
+    };
     for (const key in r) {
-        if(r[key] === null) delete r[key];
+        if (r[key] === null) delete r[key];
     }
 
     return r;
