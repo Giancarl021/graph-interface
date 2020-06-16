@@ -55,13 +55,7 @@ const defaultOptions = {
             async: true,
             requests: 50
         },
-        type: null,
-        typeOptions: {
-            ...listDefault,
-            limit: null,
-            offset: null,
-            fields: []
-        }
+        type: null
     }
 };
 

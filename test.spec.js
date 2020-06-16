@@ -8,11 +8,7 @@ const credentials = {
     clientSecret: process.env.CLIENT_SECRET
 };
 
-const options = {
-    cache: {
-        type: null
-    }
-};
+const options = {};
 
 const ttl = 3600;
 

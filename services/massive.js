@@ -3,7 +3,7 @@ const createGraphInterface = require('../index');
 
 const CHUNK_SIZE = 20;
 
-module.exports = function (urls, token, binder, endpoint, method, parseMode, parseModeOptions, requestsPerCycle, requestMode, maxAttempts, unit, list) {
+module.exports = function (urls, token, binder, endpoint, method, parseMode, requestsPerCycle, requestMode, maxAttempts) {
     let attempts = 0;
     let fallSize = 0;
     const requester = createRequestHandler();
