@@ -8,7 +8,11 @@ const credentials = {
     clientSecret: process.env.CLIENT_SECRET
 };
 
-const options = {};
+const options = {
+    cache: {
+        type: 'fs'
+    }
+};
 
 const ttl = 3600;
 
@@ -40,9 +44,6 @@ async function main() {
     }, {
         binder: 'id',
         type: 'list',
-        typeOptions: {
-            map: license => license.skuPartNumber
-        },
         cycle: {
             async: true,
             requests: 200
@@ -57,7 +58,7 @@ async function main() {
     console.log('Binding licenses...');
     for(let i = 0; i < users.length; i++) {
         const { id } = users[i];
-        users[i].licenses = licenses[id];
+        users[i].licenses = licenses[id].map(e => e.skuPartNumber);
     }
 
     console.log('Saving response...');
