@@ -45,6 +45,7 @@ module.exports = function (urls, token, binder, endpoint, method, parseMode, par
 
         if(fall.length) {
             if(fallSize === fall.length) attempts++;
+            else attempts = 0;
             if(attempts >= maxAttempts) throw new Error('Max attempts tried');
             fallSize = fall.length;
             const response =  await get(pack(bind(fall)), asyncMode);

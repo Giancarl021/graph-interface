@@ -7,13 +7,16 @@ const {
     promisify
 } = require('util');
 
-module.exports = async function (options) {
+module.exports = async function (options, addConnection) {
     const client = redis.createClient(nullifyOptions(options));
 
     try {
         await new Promise((resolve, reject) => {
             client.on('error', reject);
-            client.on('ready', resolve);
+            client.on('ready', () => {
+                addConnection(client);
+                resolve();
+            });
         });
     } catch (err) {
         throw new Error('Redis connection error: ' + err.message);

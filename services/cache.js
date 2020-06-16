@@ -1,7 +1,8 @@
 const createFsInterface = require('../util/fs-cache');
 const createRedisInterface = require('../util/redis-cache');
 
-module.exports = function (options) {
+module.exports = async function (options) {
+    const connections = [];
     const interfaces = {
         fs: createFsInterface,
         redis: createRedisInterface
@@ -18,6 +19,19 @@ module.exports = function (options) {
 
     const index = options.type;
     const parameters = options[index];
-    const interface = interfaces[index](parameters);
-    return interface;
+    const interface = await interfaces[index](parameters, addConnection);
+    return {
+        interface,
+        closeConnections
+    };
+
+    function addConnection(client) {
+        connections.push(client);
+    }
+
+    async function closeConnections() {
+        for(const connection of connections) {
+            await connection.quit();
+        }
+    }
 }

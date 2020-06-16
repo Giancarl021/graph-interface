@@ -21,9 +21,11 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
         clientSecret
     } = request.requireParams(credentials, ['tenant-id', 'client-id', 'client-secret']);
 
-    let createCacheHandler;
+    let createCacheHandler, closeConnections;
     try {
-        createCacheHandler = await createCacheInterface(mainOptions.cache);
+        const cacheData = await createCacheInterface(mainOptions.cache);
+        createCacheHandler = cacheData.interface,
+        closeConnections = cacheData.closeConnections;
     } catch (err) {
         throw err;
     }
@@ -46,7 +48,7 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
         };
 
         if (mainOptions.cache.tokenCache && await cache.exists()) {
-            return responser.save(await cache.get().access_token, options);
+            return responser.save((await cache.get()).access_token, options);
         } else {
             const response = await request.get(getOptions);
             request.catchResponse(response);
@@ -187,6 +189,10 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
         return responser.save(response, options);
     }
 
+    async function close() {
+        await closeConnections();
+    }
+
     function warn(message) {
         if (!mainOptions.supressWarnings) {
             console.warn('[!] Warning: ' + message);
@@ -197,6 +203,7 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
         getToken,
         unit,
         list,
-        massive
+        massive,
+        close
     }
 }

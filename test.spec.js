@@ -3,14 +3,14 @@ require('dotenv').config();
 const createGraphInterface = require('./index');
 
 const credentials = {
-    tenant_id: process.env.TENANT_ID,
+    'tenant-id': process.env.TENANT_ID,
     client_id: process.env.CLIENT_ID,
-    client_secret: process.env.CLIENT_SECRET
+    clientSecret: process.env.CLIENT_SECRET
 };
 
 const options = {
     cache: {
-        type: 'fs'
+        type: 'redis'
     }
 };
 
@@ -52,7 +52,7 @@ async function main() {
             requests: 200
         },
         cache: {
-            // expiresIn: ttl
+            expiresIn: ttl
         }
     });
 
@@ -69,8 +69,10 @@ async function main() {
     require('./util/json')(`responses/${Date.now()}`).save(users);
 
     console.log('Response built');
+
+    await graph.close();
 }
 
 main()
-    .catch(console.error)
-    .finally(() => process.exit(0));
+    // .catch(console.error)
+    // .finally(() => process.exit(0));
