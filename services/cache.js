@@ -8,13 +8,20 @@ module.exports = async function (options) {
         redis: createRedisInterface
     };
 
-    if(!options.type) {
+    if (!options.type) {
         const empty = () => null;
-        return () => ({
-            get: empty,
-            set: empty,
-            exists: empty
-        });
+        return {
+            interface() {
+                return {
+                    get: empty,
+                    set: empty,
+                    exists: empty
+                }
+            },
+            closeConnections() {
+                return null
+            }
+        };
     }
 
     const index = options.type;
@@ -30,7 +37,7 @@ module.exports = async function (options) {
     }
 
     async function closeConnections() {
-        for(const connection of connections) {
+        for (const connection of connections) {
             await connection.quit();
         }
     }

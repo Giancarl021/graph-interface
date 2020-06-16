@@ -10,7 +10,7 @@ const credentials = {
 
 const options = {
     cache: {
-        type: 'redis'
+        type: null
     }
 };
 
@@ -73,6 +73,4 @@ async function main() {
     await graph.close();
 }
 
-main()
-    // .catch(console.error)
-    // .finally(() => process.exit(0));
+main().catch(console.error);
