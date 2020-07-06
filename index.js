@@ -1,15 +1,16 @@
 const createRequestHandler = require('./util/request');
-const createCacheHandler = require('./util/cache');
+const createCacheInterface = require('./services/cache');
 const createResponseHandler = require('./util/response');
 const createObjectHandler = require('./util/object');
 const createHash = require('./util/hash');
-
+const createPatternParser = require('./util/pattern');
+const createMassiveRequestHandler = require('./services/massive');
 const {
     defaultOptions,
     fillOptions
 } = require('./util/options');
 
-module.exports = function (credentials, mainOptions = defaultOptions.main) {
+module.exports = async function (credentials, mainOptions = defaultOptions.main) {
     fillOptions(mainOptions, 'main');
     const endpoint = `https://graph.microsoft.com/${mainOptions.version}`;
     const request = createRequestHandler();
@@ -20,10 +21,18 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         clientSecret
     } = request.requireParams(credentials, ['tenant-id', 'client-id', 'client-secret']);
 
-    const tokenCache = createCacheHandler(`.gphcache/${createHash(clientId + clientSecret + tenantId)}`, mainOptions.cache.cleanupInterval);
+    let createCacheHandler, closeConnections;
+    try {
+        const cacheData = await createCacheInterface(mainOptions.cache);
+        createCacheHandler = cacheData.interface,
+        closeConnections = cacheData.closeConnections;
+    } catch (err) {
+        throw err;
+    }
 
     async function getToken(options = defaultOptions.token) {
         fillOptions(options, 'token');
+        const cache = await createCacheHandler(createHash(clientId + clientSecret + tenantId));
         const getOptions = {
             method: 'POST',
             url: `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
@@ -38,13 +47,13 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
             }
         };
 
-        if (mainOptions.tokenCache && tokenCache.hasCache()) {
-            return responser.save(tokenCache.getCache().access_token, options);
+        if (mainOptions.cache.tokenCache && await cache.exists()) {
+            return responser.save((await cache.get()).access_token, options);
         } else {
             const response = await request.get(getOptions);
             request.catchResponse(response);
-            if (mainOptions.tokenCache) {
-                tokenCache.setCache(response, response.expires_in);
+            if (mainOptions.cache.tokenCache) {
+                await cache.set(response, response.expires_in);
             }
             return responser.save(response.access_token, options);
         }
@@ -52,9 +61,9 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
 
     async function unit(url, options = defaultOptions.unit) {
         fillOptions(options, 'unit');
-        const cache = options.cache.expiresIn ? createCacheHandler(`.gphcache/${createHash(clientId + clientSecret + tenantId + url + JSON.stringify(options))}`) : null;
-        if (cache && cache.hasCache()) {
-            return responser.save(cache.getCache(), options);
+        const cache = options.cache.expiresIn ? await createCacheHandler(createHash(clientId + clientSecret + tenantId + url + JSON.stringify(options))) : null;
+        if (cache && await cache.exists()) {
+            return responser.save(await cache.get(), options);
         }
 
         const token = await getToken();
@@ -83,16 +92,16 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         }
 
         if (cache) {
-            cache.setCache(response, options.cache.expiresIn);
+            await cache.set(response, options.cache.expiresIn);
         }
         return responser.save(response, options);
     }
 
     async function list(url, options = defaultOptions.list) {
         fillOptions(options, 'list');
-        const cache = options.cache.expiresIn ? createCacheHandler(`.gphcache/${createHash(clientId + clientSecret + tenantId + url + JSON.stringify(options))}`) : null;
-        if (cache && cache.hasCache()) {
-            return responser.save(cache.getCache(), options);
+        const cache = options.cache.expiresIn ? await createCacheHandler(createHash(clientId + clientSecret + tenantId + url + JSON.stringify(options))) : null;
+        if (cache && await cache.exists()) {
+            return responser.save(await cache.get(), options);
         }
         const token = await getToken();
         const getOptions = {
@@ -114,9 +123,71 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
         }
 
         if (cache) {
-            cache.setCache(response, options.cache.expiresIn);
+            await cache.set(response, options.cache.expiresIn);
         }
         return responser.save(response, options);
+    }
+
+    async function massive(urlPattern, values, options = defaultOptions.massive) {
+        fillOptions(options, 'massive');
+
+        if (!values || typeof values !== 'object' || Array.isArray(values)) {
+            throw new Error('Values parameter must be an valid object');
+        }
+
+        if (typeof options.cycle.requests !== 'number') {
+            throw new Error('Option requestPerCycle must be an valid number');
+        }
+
+        if (typeof options.cycle.attempts !== 'number') {
+            throw new Error('Option attempts must be an valid number');
+        }
+
+        if (!options.binder || !values.hasOwnProperty(options.binder)) {
+            throw new Error('Option binder must be an key of values object');
+        }
+
+        if (!['unit', 'list'].includes(options.type)) {
+            throw new Error('The key "type" must have the value "unit" or "list"');
+        }
+        const cache = options.cache.expiresIn ? await createCacheHandler(createHash(clientId + clientSecret + tenantId + urlPattern + JSON.stringify(options))) : null;
+        if (cache && await cache.exists()) {
+            return responser.save(await cache.get(), options);
+        }
+
+        const pattern = createPatternParser(urlPattern, /{[^{}]*?}/g, /({|})*/g);
+        const urls = pattern.replaceArray(values);
+        if (!urls.length) return [];
+
+        const token = await getToken();
+
+        const binder = {};
+
+        let i = 0;
+        for(const url of urls) binder[url] = values[options.binder][i++];
+
+        const requester = createMassiveRequestHandler(
+            urls,
+            token,
+            binder,
+            endpoint,
+            options.method,
+            options.type,
+            options.cycle.requests,
+            options.cycle.async,
+            options.cycle.attempts
+        );
+
+        const response = await requester.request();
+
+        if (cache) {
+            await cache.set(response, options.cache.expiresIn);
+        }
+        return responser.save(response, options);
+    }
+
+    async function close() {
+        await closeConnections();
     }
 
     function warn(message) {
@@ -128,6 +199,8 @@ module.exports = function (credentials, mainOptions = defaultOptions.main) {
     return {
         getToken,
         unit,
-        list
+        list,
+        massive,
+        close
     }
 }

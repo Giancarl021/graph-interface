@@ -1,17 +1,61 @@
 {
-  "name": "graph-interface",
-  "version": "0.1.0",
-  "description": "An package with the focus on making easy the first contact with MS Graph API",
-  "main": "index.js",
-  "repository": "https://github.com/Giancarl021/graph-interface.git",
-  "author": "Gianarlo Fontela da Luz <gian.f.luz@hotmail.com>",
-  "license": "MIT",
-  "private": false,
-  "scripts": {
-    "test": "node test.spec.js"
+  "_from": "graph-interface",
+  "_id": "graph-interface@0.1.4",
+  "_inBundle": false,
+  "_integrity": "sha512-U1Y92iFEMQeabFRYhisQuo26es8jgruEomZ7tMnTv1ClApmi7v3a2ejgAfZu5n0UwbQcHFwumYhLr75UAlAE/Q==",
+  "_location": "/graph-interface",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "tag",
+    "registry": true,
+    "raw": "graph-interface",
+    "name": "graph-interface",
+    "escapedName": "graph-interface",
+    "rawSpec": "",
+    "saveSpec": null,
+    "fetchSpec": "latest"
   },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/graph-interface/-/graph-interface-0.1.4.tgz",
+  "_shasum": "1cd7079c0e7bd01b9889a998247f0b03f51da4b7",
+  "_spec": "graph-interface",
+  "_where": "C:\\Users\\Pichau\\Documents\\Git\\graph-interface",
+  "author": {
+    "name": "Gianarlo Fontela da Luz",
+    "email": "gian.f.luz@hotmail.com"
+  },
+  "bugs": {
+    "url": "https://github.com/Giancarl021/graph-interface/issues"
+  },
+  "bundleDependencies": false,
   "dependencies": {
     "redis": "^3.0.2",
     "request": "^2.88.2"
-  }
+  },
+  "deprecated": false,
+  "description": "An package with the focus on making easy the first contact with MS Graph API",
+  "devDependencies": {
+    "dotenv": "^8.2.0"
+  },
+  "homepage": "https://github.com/Giancarl021/graph-interface#readme",
+  "keywords": [
+    "Azure Ad",
+    "Microsoft Graph API",
+    "API"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "name": "graph-interface",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Giancarl021/graph-interface.git"
+  },
+  "scripts": {
+    "test": "node test.spec.js"
+  },
+  "version": "0.1.4"
 }

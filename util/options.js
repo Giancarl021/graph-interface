@@ -49,24 +49,42 @@ const defaultOptions = {
     },
     massive: {
         ...subDefault,
-        ...listDefault,
-        attempts: 3,
-        requestsPerCycle: 50,
+        binder: null,
+        cycle: {
+            attempts: 3,
+            async: true,
+            requests: 50
+        },
         type: null
     }
 };
 
 function fillOptions(options, filler) {
-    const f = defaultOptions[filler];
+    const f = typeof filler === 'object' ? filler : defaultOptions[filler];
     for (const key in f) {
         if (!options.hasOwnProperty(key)) {
             options[key] = f[key];
+        } else if (typeof f[key] === 'object') {
+            const obj = options[key];
+            fillOptions(obj, f[key]);
+            options[key] = obj;
         }
     }
 }
 
+function nullifyOptions(options) {
+    const r = {
+        ...options
+    };
+    for (const key in r) {
+        if (r[key] === null) delete r[key];
+    }
+
+    return r;
+}
+
 module.exports = {
     defaultOptions,
-    serviceOptions,
-    fillOptions
+    fillOptions,
+    nullifyOptions
 };
