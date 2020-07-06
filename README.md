@@ -85,6 +85,7 @@ const url = 'users/{user-id}';
 const options = {
     saveOn: null, // Path to filename with the result of the request
     method: 'GET', // The method of the request
+    body: null, // The body of the request, can be JSON or an Object
     cache: {
         expiresIn: null // The Time To Live (TTL) in seconds of the response if you configured an cache on the global options
     },
@@ -104,6 +105,7 @@ const url = 'users';
 const options = {
     saveOn: null, // Path to filename with the result of the request
     method: 'GET', // The method of the request
+    body: null, // The body of the request, can be JSON or an Object
     cache: {
         expiresIn: null // The Time To Live (TTL) in seconds of the response if you configured an cache on the global options
     },
@@ -129,6 +131,7 @@ const values = {
 const options = {
     saveOn: null, // Path to filename with the result of the request
     method: 'GET', // The method of the request
+    body: null, // The body of the request, can be JSON or an Object. Will replicate to all requests
     cache: {
         expiresIn: null // The Time To Live (TTL) in seconds of the response if you configured an cache on the global options
     },
