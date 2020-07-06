@@ -3,7 +3,7 @@ const createGraphInterface = require('../index');
 
 const CHUNK_SIZE = 20;
 
-module.exports = function (urls, token, binder, endpoint, method, parseMode, requestsPerCycle, requestMode, maxAttempts) {
+module.exports = function (urls, token, binder, endpoint, method, body, parseMode, requestsPerCycle, requestMode, maxAttempts) {
     let attempts = 0;
     let fallSize = 0;
     const requester = createRequestHandler();
@@ -62,11 +62,17 @@ module.exports = function (urls, token, binder, endpoint, method, parseMode, req
     }
 
     function bind(urls) {
-        return urls.map(url => ({
-            url,
-            method,
-            id: binder[url]
-        }));
+        return urls.map(url => {
+            const bind = {
+                url,
+                method,
+                id: binder[url]
+            };
+            if(body) {
+                bind.body = body
+            }
+            return bind;
+        });
     }
 
     function pack(requests) {

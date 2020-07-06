@@ -25,7 +25,7 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
     try {
         const cacheData = await createCacheInterface(mainOptions.cache);
         createCacheHandler = cacheData.interface,
-        closeConnections = cacheData.closeConnections;
+            closeConnections = cacheData.closeConnections;
     } catch (err) {
         throw err;
     }
@@ -71,9 +71,20 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
             url: `${endpoint}/${url}`,
             method: options.method,
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
         };
+
+        try {
+            if (options.body && typeof options.body === 'string') {
+                options.body = JSON.parse(options.body);
+            }
+        } catch (err) {
+            throw new Error('Body Parsing Error: ' + err.message);
+        }
+
+        if (options.body) getOptions.body = JSON.stringify(options.body);
 
         let response = await request.get(getOptions);
         request.catchResponse(response);
@@ -108,9 +119,20 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
             url: `${endpoint}/${url}`,
             method: options.method,
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
         };
+
+        try {
+            if (options.body && typeof options.body === 'string') {
+                options.body = JSON.parse(options.body);
+            }
+        } catch (err) {
+            throw new Error('Body Parsing Error: ' + err.message);
+        }
+
+        if (options.body) getOptions.body = JSON.stringify(options.body);
 
         let response = await request.pagination(getOptions, options.limit, options.offset);
         request.catchResponse(response);
@@ -150,6 +172,15 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
         if (!['unit', 'list'].includes(options.type)) {
             throw new Error('The key "type" must have the value "unit" or "list"');
         }
+
+        try {
+            if (options.body && typeof options.body === 'string') {
+                options.body = JSON.parse(options.body);
+            }
+        } catch (err) {
+            throw new Error('Body Parsing Error: ' + err.message);
+        }
+
         const cache = options.cache.expiresIn ? await createCacheHandler(createHash(clientId + clientSecret + tenantId + urlPattern + JSON.stringify(options))) : null;
         if (cache && await cache.exists()) {
             return responser.save(await cache.get(), options);
@@ -164,7 +195,7 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
         const binder = {};
 
         let i = 0;
-        for(const url of urls) binder[url] = values[options.binder][i++];
+        for (const url of urls) binder[url] = values[options.binder][i++];
 
         const requester = createMassiveRequestHandler(
             urls,
@@ -172,6 +203,7 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
             binder,
             endpoint,
             options.method,
+            options.body,
             options.type,
             options.cycle.requests,
             options.cycle.async,

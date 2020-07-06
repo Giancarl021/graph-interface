@@ -1,6 +1,7 @@
 const subDefault = {
     saveOn: null,
     method: 'GET',
+    body: null,
     cache: {
         expiresIn: null
     }

@@ -7,6 +7,9 @@ function get(options) {
     return new Promise((resolve, reject) => {
         request(options, (err, res) => {
             if (err) return reject(err);
+            if(res.statusCode === 204) {
+                return {};
+            }
             return resolve(JSON.parse(res.body));
         });
     });
