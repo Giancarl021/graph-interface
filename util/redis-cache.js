@@ -2,7 +2,7 @@ const redis = require('redis');
 const createCryptHandler = require('./crypt');
 const {
     nullifyOptions
-} = require('../util/options');
+} = require('./options');
 const {
     promisify
 } = require('util');
