@@ -16,7 +16,8 @@ const listDefault = {
 const defaultOptions = {
     main: {
         version: 'v1.0',
-        supressWarnings: false,
+        authenticationProvider: null,
+        suppressWarnings: false,
         cache: {
             type: null,
             tokenCache: true,

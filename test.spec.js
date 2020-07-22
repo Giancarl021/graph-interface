@@ -53,7 +53,7 @@ async function main() {
         }
     });
 
-    console.log(require('./util/object')(licenses).size() + ' licenses retrived');
+    console.log(require('./util/object')(licenses).size() + ' licenses retrieved');
 
     console.log('Binding licenses...');
     for(let i = 0; i < users.length; i++) {

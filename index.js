@@ -24,14 +24,19 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
     let createCacheHandler, closeConnections;
     try {
         const cacheData = await createCacheInterface(mainOptions.cache);
-        createCacheHandler = cacheData.interface,
-            closeConnections = cacheData.closeConnections;
+        createCacheHandler = cacheData.interface;
+        closeConnections = cacheData.closeConnections;
     } catch (err) {
         throw err;
     }
 
     async function getToken(options = defaultOptions.token) {
         fillOptions(options, 'token');
+
+        if(mainOptions.authenticationProvider && typeof mainOptions.authenticationProvider !== 'function') {
+            throw new Error('Authentication Provider need to be a function');
+        }
+
         const cache = await createCacheHandler(createHash(clientId + clientSecret + tenantId));
         const getOptions = {
             method: 'POST',
@@ -50,11 +55,12 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
         if (mainOptions.cache.tokenCache && await cache.exists()) {
             return responser.save((await cache.get()).access_token, options);
         } else {
-            const response = await request.get(getOptions);
+            const response = await (mainOptions.authenticationProvider ? mainOptions.authenticationProvider(credentials) : request.get(getOptions));
             request.catchResponse(response);
             if (mainOptions.cache.tokenCache) {
                 await cache.set(response, response.expires_in);
             }
+
             return responser.save(response.access_token, options);
         }
     }
@@ -223,7 +229,7 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
     }
 
     function warn(message) {
-        if (!mainOptions.supressWarnings) {
+        if (!mainOptions.suppressWarnings) {
             console.warn('[!] Warning: ' + message);
         }
     }

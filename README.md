@@ -32,7 +32,8 @@ You can pass some options too:
 ```javascript
 const options = {
     version: 'v1.0', // v1.0 or beta
-    supressWarnings: false, // Will not print the warnings when requesting unit or list
+    authenticationProvider: null, // Function used to retrieve the access token, if null the default application token function is used. It is required for delegated authentication.
+    suppressWarnings: false, // Will not print the warnings when requesting unit or list
     cache: {
         type: null, // null | 'fs' | 'redis'
         tokenCache: true, // Use token cache or not
@@ -52,6 +53,11 @@ const options = {
     }
 };
 ```
+
+The options ``authenticationProvider`` is **required** for delegated access. Exemples can be founded here:
+
+* [Desktop Provider](https://github.com/Giancarl021/graph-interface-desktop-provider)
+
 The creation of client is asynchronous:
 ```javascript
 const graph = await createGraphInterface(credentials, options);
@@ -138,7 +144,7 @@ const options = {
     binder: null, // [REQUIRED] The key in the values object that will be the key in the response object
     cycle: {
     	async: true, // Defines if the requests will be made in parallelism or linearly
-    	attemps: 3, // The maximum of attempts to the same quantity of errors
+    	attempts: 3, // The maximum of attempts to the same quantity of errors
     	requests: 50 // The number of requests made in the same cycle on asynchronous mode
 	},
     type: null // [REQUIRED] 'unit' | 'list'
