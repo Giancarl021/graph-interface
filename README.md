@@ -54,9 +54,9 @@ const options = {
 };
 ```
 
-The options ``authenticationProvider`` is **required** for delegated access. Exemples can be founded here:
+The option ``authenticationProvider`` is **required** for delegated access. Exemples can be founded here:
 
-* [Desktop Provider](https://github.com/Giancarl021/graph-interface-desktop-provider)
+* [Desktop Provider](https://www.npmjs.com/package/graph-interface-desktop-provider)
 
 The creation of client is asynchronous:
 ```javascript
