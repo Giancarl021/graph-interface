@@ -72,13 +72,18 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
             return responser.save(await cache.get(), options);
         }
 
+        if(options.headers && typeof options.headers !== 'object') {
+            throw new Error('Headers options must be an object');
+        }
+
         const token = await getToken();
         const getOptions = {
             url: `${endpoint}/${url}`,
             method: options.method,
             headers: {
                 'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                ...options.headers
             }
         };
 
@@ -120,13 +125,19 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
         if (cache && await cache.exists()) {
             return responser.save(await cache.get(), options);
         }
+
+        if(options.headers && typeof options.headers !== 'object') {
+            throw new Error('Headers options must be an object');
+        }
+
         const token = await getToken();
         const getOptions = {
             url: `${endpoint}/${url}`,
             method: options.method,
             headers: {
                 'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                ...options.headers
             }
         };
 
@@ -179,6 +190,10 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
             throw new Error('The key "type" must have the value "unit" or "list"');
         }
 
+        if(options.headers && typeof options.headers !== 'object') {
+            throw new Error('Headers options must be an object');
+        }
+
         try {
             if (options.body && typeof options.body === 'string') {
                 options.body = JSON.parse(options.body);
@@ -209,6 +224,7 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
             binder,
             endpoint,
             options.method,
+            options.headers,
             options.body,
             options.type,
             options.cycle.requests,

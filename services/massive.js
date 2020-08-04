@@ -3,7 +3,7 @@ const createGraphInterface = require('../index');
 
 const CHUNK_SIZE = 20;
 
-module.exports = function (urls, token, binder, endpoint, method, body, parseMode, requestsPerCycle, requestMode, maxAttempts) {
+module.exports = function (urls, token, binder, endpoint, method, headers, body, parseMode, requestsPerCycle, requestMode, maxAttempts) {
     let attempts = 0;
     let fallSize = 0;
     const requester = createRequestHandler();
@@ -85,7 +85,8 @@ module.exports = function (urls, token, binder, endpoint, method, body, parseMod
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    ...headers
                 },
                 body: JSON.stringify({
                     requests: requests.slice(i, l)
