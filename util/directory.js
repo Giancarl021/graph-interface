@@ -1,9 +1,9 @@
 const fs = require('fs');
-const { isAbsolute } = require('path');
+const { isAbsolute, dirname } = require('path');
 
 module.exports = function (path) {
 
-    const pathToRoot = process.cwd().replace(/\\/g, '/');
+    const pathToRoot = dirname(require.main.filename).replace(/\\/g, '/');
     const _path = isAbsolute(path) ? path.replace(/\\/g, '/') : `${pathToRoot}/${path}`;
 
     function make(recursive = false) {

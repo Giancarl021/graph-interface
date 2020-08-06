@@ -5,10 +5,7 @@ const createObjectHandler = require('./util/object');
 const createHash = require('./util/hash');
 const createPatternParser = require('./util/pattern');
 const createMassiveRequestHandler = require('./services/massive');
-const {
-    defaultOptions,
-    fillOptions
-} = require('./util/options');
+const { defaultOptions, fillOptions } = require('./util/options');
 
 module.exports = async function (credentials, mainOptions = defaultOptions.main) {
     fillOptions(mainOptions, 'main');
@@ -72,8 +69,18 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
             return responser.save(await cache.get(), options);
         }
 
-        if(options.headers && typeof options.headers !== 'object') {
-            throw new Error('Headers options must be an object');
+        let customHeaders = {};
+
+        if(options.headers) {
+            if(typeof options.headers === 'object') {
+                customHeaders = options.headers;
+            } else {
+                try {
+                    customHeaders = JSON.parse(options.headers);
+                } catch(err) {
+                    throw new Error('Headers Parsing Error: ' + err.message);
+                }
+            }
         }
 
         const token = await getToken();
@@ -83,7 +90,7 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
-                ...options.headers
+                ...customHeaders
             }
         };
 
@@ -126,8 +133,18 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
             return responser.save(await cache.get(), options);
         }
 
-        if(options.headers && typeof options.headers !== 'object') {
-            throw new Error('Headers options must be an object');
+        let customHeaders = {};
+
+        if(options.headers) {
+            if(typeof options.headers === 'object') {
+                customHeaders = options.headers;
+            } else {
+                try {
+                    customHeaders = JSON.parse(options.headers);
+                } catch(err) {
+                    throw new Error('Headers Parsing Error: ' + err.message);
+                }
+            }
         }
 
         const token = await getToken();
@@ -137,7 +154,7 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
-                ...options.headers
+                ...customHeaders
             }
         };
 
@@ -190,8 +207,18 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
             throw new Error('The key "type" must have the value "unit" or "list"');
         }
 
-        if(options.headers && typeof options.headers !== 'object') {
-            throw new Error('Headers options must be an object');
+        let customHeaders = {};
+
+        if(options.headers) {
+            if(typeof options.headers === 'object') {
+                customHeaders = options.headers;
+            } else {
+                try {
+                    customHeaders = JSON.parse(options.headers);
+                } catch(err) {
+                    throw new Error('Headers Parsing Error: ' + err.message);
+                }
+            }
         }
 
         try {
@@ -224,7 +251,7 @@ module.exports = async function (credentials, mainOptions = defaultOptions.main)
             binder,
             endpoint,
             options.method,
-            options.headers,
+            customHeaders,
             options.body,
             options.type,
             options.cycle.requests,
