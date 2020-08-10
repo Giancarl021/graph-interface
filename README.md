@@ -96,7 +96,7 @@ const options = {
     cache: {
         expiresIn: null // The Time To Live (TTL) in seconds of the response if you configured an cache on the global options
     },
-    fields: [] // An array with the fields of the response you want to return (can be combined with the $select oData attribute)
+    fields: [] // An array with the fields of the response you want to return (can be combined with the $select oData attribute). Can convert the field name with the keyword "<original field name> as <new name>".
 };
 ```
 Call:
