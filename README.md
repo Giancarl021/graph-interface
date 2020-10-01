@@ -1,7 +1,7 @@
 # graph-interface
 A module to simplify the [Microsoft Graph API](https://docs.microsoft.com/en-us/graph/overview) requests on tenants.
 
-
+[![Rate on Openbase](https://badges.openbase.io/js/rating/graph-interface.svg)](https://openbase.io/js/graph-interface?utm_source=embedded&utm_medium=badge&utm_campaign=rate-badge)
 
 ## Installation
 
