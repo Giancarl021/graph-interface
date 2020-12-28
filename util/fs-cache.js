@@ -70,11 +70,11 @@ module.exports = function (options) {
                 if (Date.now() >= file.load()) {
                     file.remove();
                     clear();
-                    file.save(Date.now() + (lockTimeOfLife * 1000));
+                    file.save(String(Date.now() + (lockTimeOfLife * 1000)));
                 }
             } else {
                 clear();
-                file.save(Date.now() + (lockTimeOfLife * 1000));
+                file.save(String(Date.now() + (lockTimeOfLife * 1000)));
             }
 
             function clear() {
