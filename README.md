@@ -25,7 +25,7 @@ To instantiate the client you must have the tenant credentials to call the Graph
 const credentials = {
 	tenantId: '...',
 	clientId: '...',
-	clientSecrets: '...'
+	clientSecret: '...'
 };
 ```
 You can pass some options too:
