@@ -55,8 +55,7 @@ export default function (credentials: Credentials, options?: GraphOptions) {
         if (_options.authenticationProvider !== undefined) {
             await log('Retrieving access token from custom authentication provider');
 
-            // TODO: Add support for custom authentication providers
-            const token = {} as AccessTokenResponse; //  await _options.authenticationProvider(credentials);
+            const token = await _options.authenticationProvider(credentials);
 
             if (opt.useCache) {
                 const cache = getCacheService();
@@ -145,6 +144,7 @@ export {
     CacheService,
     Logger,
     Credentials,
+    AccessTokenResponse,
     Options,
     TokenOptions,
     GraphOptions

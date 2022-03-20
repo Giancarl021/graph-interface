@@ -2,6 +2,7 @@
 __ref/
 lib/
 test.ts
+test.js
 
 # Logs
 logs
