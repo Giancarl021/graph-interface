@@ -1,5 +1,10 @@
+interface KeyMapperItem {
+    name: string;
+    value: KeyMapper;
+}
+
 interface KeyMapper {
-    [key: string]: string;
+    [originalName: string]: KeyMapperItem | string;
 }
 
 export default KeyMapper;

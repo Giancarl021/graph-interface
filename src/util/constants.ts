@@ -1,11 +1,11 @@
-import { Options, TokenOptions } from '../..';
+import { Options, UnitOptions } from '../..';
 import { KeyMapper } from '../interfaces';
 import MemoryCache from '../services/memory-cache';
 
 interface Constants {
     options: {
         main: Options;
-        token: TokenOptions;
+        unit: UnitOptions;
     },
     keyMappers: {
         accessToken: KeyMapper;
@@ -21,19 +21,23 @@ const constants: Constants = {
             cacheService: MemoryCache(),
             authenticationProvider: undefined
         },
-        token: {
-            useCache: true
+        unit: {
+            useCache: false,
+            method: 'GET',
+            headers: {},
+            body: null,
+            keyMapper: null
         }
     },
     keyMappers: {
         accessToken: {
-            accessToken: 'access_token',
-            expiresIn: 'expires_in',
-            tokenType: 'token_type',
-            refreshToken: 'refresh_token',
-            extExpiresIn: 'ext_expires_in',
-            expiresOn: 'expires_on',
-            notBefore: 'not_before',
+            access_token: 'accessToken',
+            expires_in: 'expiresIn',
+            token_type: 'tokenType',
+            refresh_token: 'refreshToken',
+            ext_expires_in: 'extExpiresIn',
+            expires_on: 'expiresOn',
+            not_before: 'notBefore',
             resource: 'resource'
         }
     }
