@@ -1,8 +1,7 @@
-# Cache
-.gphcache/
-
-# Local files
-responses/
+# Old version references
+__ref/
+lib/
+test.ts
 
 # Logs
 logs
