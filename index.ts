@@ -1,4 +1,4 @@
-import { AuthenticationProvider, CacheService, Logger, AccessTokenResponse, KeyMapper, RequestOptions, HttpHeaders } from './src/interfaces';
+import { CacheService, AccessTokenResponse, KeyMapper, HttpHeaders, Credentials, GraphOptions, TokenOptions, UnitOptions, ListOptions } from './src/interfaces';
 import Nullable from './src/interfaces/util/Nullable';
 import axios, { AxiosResponse, AxiosError, Method, AxiosRequestConfig } from 'axios';
 import fill from 'fill-object';
@@ -10,36 +10,18 @@ import hashRequest from './src/services/request-hasher';
 const TOKEN_CACHE_KEY = 'INTERNAL::TOKEN_CACHE_KEY';
 const BATCH_REQUEST_SIZE = 20;
 
-interface Credentials {
-    clientId: string;
-    clientSecret: string;
-    tenantId: string;
-}
-
-interface Options {
-    version: string;
-    logger?: Logger;
-    authenticationProvider?: AuthenticationProvider;
-    cacheService?: CacheService;
-    cacheAccessTokenByDefault: boolean;
-}
-
-interface UnitOptions extends RequestOptions {}
-
 interface Response {
     [key: string]: any;
 }
 
-interface TokenOptions {
-    useCache: boolean;
+interface ListResponse<T> {
+    '@odata.context': string;
+    '@odata.nextLink'?: string;
+    value: T[];
 }
 
-type GraphOptions = Partial<Options>;
-type GraphTokenOptions = Partial<TokenOptions>;
-type GraphUnitOptions = Partial<UnitOptions>;
-
-export default function (credentials: Credentials, options?: GraphOptions) {
-    const _options: Options = fill(options ?? {}, Constants.options.main) as Options;
+export = function GraphInterface(credentials: Credentials, options?: Partial<GraphOptions>) {
+    const _options = fill(options ?? {}, Constants.options.main) as GraphOptions;
     const endpoint = `https://graph.microsoft.com/${_options.version}`;
     const batchEndpoint = `${endpoint}/$batch`;
 
@@ -47,7 +29,7 @@ export default function (credentials: Credentials, options?: GraphOptions) {
         _options.cacheAccessTokenByDefault = false;
     }
 
-    async function getAccessToken(options?: GraphTokenOptions): Promise<string> {
+    async function getAccessToken(options?: Partial<TokenOptions>): Promise<string> {
         const opt = fill(options ?? {}, { useCache: _options.cacheAccessTokenByDefault }) as TokenOptions;
 
         if (opt.useCache) {
@@ -73,7 +55,7 @@ export default function (credentials: Credentials, options?: GraphOptions) {
 
             return token.accessToken;
         }
-        
+
         await log('Requesting new access token');
 
         const requestOptions: AxiosRequestConfig = {
@@ -99,11 +81,12 @@ export default function (credentials: Credentials, options?: GraphOptions) {
             await cache.set(TOKEN_CACHE_KEY, token, token.expiresIn);
         }
 
+        await log('Returning access token');
         return token.accessToken;
     }
 
-    async function unit<T>(resource: string, options?: GraphUnitOptions): Promise<T> {
-        if (!resource || resource.trim() === '') throw new Error('Resource cannot be empty');
+    async function unit<T>(resource: string, options?: Partial<UnitOptions>): Promise<T> {
+        checkResource(resource);
 
         const opt = fill(options ?? {}, Constants.options.unit) as UnitOptions;
         const hash: string = opt.useCache ? hashRequest(resource, opt) : '';
@@ -151,8 +134,67 @@ export default function (credentials: Credentials, options?: GraphOptions) {
         return result;
     }
 
-    async function list<T>(resource: string): Promise<T[]> {
-        throw new Error('Not implemented');
+    async function list<T>(resource: string, options?: Partial<ListOptions>): Promise<T[]> {
+        checkResource(resource);
+
+        const opt = fill(options ?? {}, Constants.options.list) as ListOptions;
+
+        if (opt.limit === 0) {
+            return [];
+        }
+
+        const hash: string = opt.useCache ? hashRequest(resource, opt) : '';
+
+        if (opt.useCache) {
+            const cache = getCacheService();
+
+            if (await cache.has(hash)) {
+                await log('Returning cached list response');
+                return (await cache.get<T[]>(hash));
+            }
+        }
+
+        const unitOptions = decayOptions();
+        const offset = opt.offset ?? 0;
+        const result: T[] = [];
+
+        let response: ListResponse<T>;
+        let index = 0;
+        let nextUri: string = resource;
+        const hasFinished = (index: number) => {
+            if (!opt.limit) return false;
+
+            return ((index - offset) === (opt.limit ?? 0))
+        };
+
+        do {
+            response = await unit<ListResponse<T>>(nextUri, unitOptions);
+
+            if (index >= offset) result.push(...response.value);
+
+            nextUri = response['@odata.nextLink'] ?? '';
+            index++;
+        } while (Boolean(nextUri) && !hasFinished(index));
+
+        if (opt.useCache) {
+            const cache = getCacheService();
+
+            await log('Caching list response');
+            await cache.set(hash, result);
+        }
+
+        await log('Returning list response');
+        return result;
+
+        function decayOptions(): UnitOptions {
+            return {
+                body: opt.body,
+                headers: opt.headers,
+                keyMapper: opt.keyMapper,
+                method: opt.method,
+                useCache: false
+            };
+        }
     }
 
     async function massive<T>(resourcePattern: string): Promise<{ [binder: string]: T }> {
@@ -189,7 +231,7 @@ export default function (credentials: Credentials, options?: GraphOptions) {
             const result: Response = {};
             for (const key in mapper) {
                 const mapping = mapper[key];
-    
+
                 if (object.hasOwnProperty(key)) {
                     if (typeof mapping === 'object') {
                         result[mapping.name] = map(object[key], mapping.value);
@@ -208,11 +250,14 @@ export default function (credentials: Credentials, options?: GraphOptions) {
 
         return _options.cacheService;
     }
-    
-    async function log(message: string) : Promise<void> {
+
+    async function log(message: string): Promise<void> {
         if (_options.logger !== undefined) await _options.logger(message);
     }
 
+    function checkResource(resource: string) {
+        if (!resource || resource.trim() === '') throw new Error('Resource cannot be empty');
+    }
 
     return {
         getAccessToken,
@@ -220,16 +265,4 @@ export default function (credentials: Credentials, options?: GraphOptions) {
         list,
         massive
     };
-}
-
-export {
-    AuthenticationProvider,
-    CacheService,
-    Logger,
-    Credentials,
-    AccessTokenResponse,
-    Options,
-    TokenOptions,
-    UnitOptions,
-    GraphOptions
 }

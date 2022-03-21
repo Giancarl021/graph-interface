@@ -1,6 +1,6 @@
-import HttpHeaders from './HttpHeaders';
-import KeyMapper from './KeyMapper';
-import Nullable from './util/Nullable';
+import HttpHeaders from '../HttpHeaders';
+import KeyMapper from '../KeyMapper';
+import Nullable from '../util/Nullable';
 
 interface RequestOptions {
     useCache: boolean;

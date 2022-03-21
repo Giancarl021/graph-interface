@@ -1,5 +1,4 @@
-import { TokenOptions } from '../..';
-import { RequestOptions } from '../interfaces';
+import { TokenOptions, RequestOptions } from '../interfaces';
 import { createHash } from 'crypto';
 
 export default function (resource: string, options: RequestOptions | TokenOptions): string {

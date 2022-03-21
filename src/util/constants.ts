@@ -1,15 +1,23 @@
-import { Options, UnitOptions } from '../..';
-import { KeyMapper } from '../interfaces';
+import { KeyMapper, GraphOptions, UnitOptions, ListOptions, RequestOptions } from '../interfaces';
 import MemoryCache from '../services/memory-cache';
 
 interface Constants {
     options: {
-        main: Options;
+        main: GraphOptions;
         unit: UnitOptions;
+        list: ListOptions;
     },
     keyMappers: {
         accessToken: KeyMapper;
     }
+}
+
+const requestOptions: RequestOptions = {
+    useCache: false,
+    method: 'GET',
+    headers: {},
+    body: null,
+    keyMapper: null
 }
 
 const constants: Constants = {
@@ -21,12 +29,11 @@ const constants: Constants = {
             cacheService: MemoryCache(),
             authenticationProvider: undefined
         },
-        unit: {
-            useCache: false,
-            method: 'GET',
-            headers: {},
-            body: null,
-            keyMapper: null
+        unit: requestOptions,
+        list: {
+            ...requestOptions,
+            limit: undefined,
+            offset: undefined
         }
     },
     keyMappers: {
