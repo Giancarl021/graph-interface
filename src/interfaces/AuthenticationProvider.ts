@@ -1,4 +1,4 @@
-import { Credentials, AccessTokenResponse } from '../..';
+import { Credentials, AccessTokenResponse } from '../interfaces';
 
 type AuthenticationProvider = (credentials: Credentials) => Promise<AccessTokenResponse> | AccessTokenResponse;
 
