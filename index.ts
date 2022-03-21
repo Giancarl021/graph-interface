@@ -1,11 +1,13 @@
-import { CacheService, AccessTokenResponse, KeyMapper, HttpHeaders, Credentials, GraphOptions, TokenOptions, UnitOptions, ListOptions } from './src/interfaces';
+import { CacheService, AccessTokenResponse, KeyMapper, HttpHeaders, Credentials, GraphOptions, TokenOptions, UnitOptions, ListOptions, MassiveOptions, PartialMassiveOptions } from './src/interfaces';
 import Nullable from './src/interfaces/util/Nullable';
 import axios, { AxiosResponse, AxiosError, Method, AxiosRequestConfig } from 'axios';
 import fill from 'fill-object';
+import chunk from 'callback-chunk';
 import isAbsoluteUrl from './src/lib/is-absolute-url';
 import formBody from './src/services/form-body';
 import Constants from './src/util/constants';
 import hashRequest from './src/services/request-hasher';
+import resourceBuilder from './src/services/resource-builder';
 
 const TOKEN_CACHE_KEY = 'INTERNAL::TOKEN_CACHE_KEY';
 const BATCH_REQUEST_SIZE = 20;
@@ -19,6 +21,43 @@ interface ListResponse<T> {
     '@odata.nextLink'?: string;
     value: T[];
 }
+
+interface MassiveResult<T> {
+    [binder: string]: Nullable<T>;
+}
+
+interface IdentifiableUrls {
+    [id: string]: string;
+}
+
+interface BatchRequestItem {
+    url: string;
+    method: Method;
+    headers: Nullable<HttpHeaders>;
+    body: any;
+    id: string;
+}
+
+interface BatchResponse {
+    responses: BatchResponseItem[]
+    isSuccessful: boolean;
+    rejectedIds: string[]
+}
+
+interface BatchResult {
+    resolved: BatchResponseItem[];
+    rejected: string[];
+}
+
+interface BatchResponseItem {
+    id: string;
+    status: number;
+    headers: HttpHeaders;
+    body: any;
+}
+
+type BatchRequestOptions = AxiosRequestConfig<Response> & Required<Pick<AxiosRequestConfig<Response>, 'headers' | 'url' | 'method'>>
+type BatchRequestCallback = () => Promise<BatchResponse>;
 
 export = function GraphInterface(credentials: Credentials, options?: Partial<GraphOptions>) {
     const _options = fill(options ?? {}, Constants.options.main) as GraphOptions;
@@ -197,8 +236,203 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
         }
     }
 
-    async function massive<T>(resourcePattern: string): Promise<{ [binder: string]: T }> {
-        throw new Error('Not implemented');
+    async function massive<T>(resourcePattern: string, options: PartialMassiveOptions): Promise<MassiveResult<T>> {
+        checkResource(resourcePattern, 'resourcePattern');
+
+        const opt = fill(options, Constants.options.massive) as MassiveOptions;
+
+        validadeOptions(opt);
+
+        const hash: string = opt.useCache ? hashRequest(resourcePattern, opt) : '';
+
+        if (opt.useCache) {
+            const cache = getCacheService();
+
+            if (await cache.has(hash)) {
+                await log('Returning cached massive response');
+                return (await cache.get<{ [ binder: string ]: T }>(hash));
+            }
+        }
+
+        await log('Generating individual urls');
+        const values = normalizeValues(opt.values as Exclude<typeof opt.values, null>);
+        let resources = resourceBuilder(resourcePattern, values);
+        let l = resources.length;
+        const urls: IdentifiableUrls = {};
+
+        const binderList = values[opt.binderIndex];
+        const results: MassiveResult<T> = {};
+        let attempts = 0;
+
+        await log('Generating individual requests');
+
+        let requests: BatchRequestItem[] = resources.map((resource, index) => ({
+            url: resource,
+            method: opt.method as Method,
+            headers: opt.headers,
+            body: opt.body,
+            id: binderList[index]
+        }));
+
+        requests.forEach(request => urls[request.id] = request.url);
+
+        do {
+            await log('Packaging requests into Graph batch requests');
+            const packages = pack(requests);
+
+            await log('Sending batch requests');
+            const responses = await chunk(packages, opt.requestsPerAttempt);
+
+            await log('Resolving batch responses');
+            const result = unpack(responses);
+
+            for (const item of result.resolved) {
+                results[item.id] = item.body as T;
+            }
+
+            if (resources.length === result.rejected.length) {
+                await log('All requests failed');
+                attempts++;
+            }
+
+            if (attempts >= opt.attempts) {
+                await log('Maximum attempts reached, nullifying errors');
+
+                if (!opt.nullifyErrors) throw new Error('Maximum attempts reached');
+
+                for (const item of result.rejected) {
+                    results[item] = null;
+                }
+
+                break;
+            }
+
+            resources = result.rejected;
+            l = resources.length;
+
+            if (l > 0) {
+                await log('Generating individual requests');
+                requests = rebind(resources);
+            }
+        } while (resources.length > 0);
+
+        if (opt.useCache) {
+            const cache = getCacheService();
+
+            await log('Caching massive response');
+            await cache.set(hash, results);
+        }
+
+        await log('Returning massive response');
+        return results;
+
+        function validadeOptions(options: MassiveOptions) {
+            if (!options.values) throw new Error('values is required');
+            let size: number | null = null;
+
+            for (const item of options.values) {
+                if (size === null) {
+                    size = item.length;
+                    continue;
+                }
+
+                if (size !== item.length) throw new Error('All values arrays must have the same length');
+            }
+
+            if (size === 0) throw new Error('values arrays cannot be empty');
+
+            if (options.binderIndex >= options.values.length) throw new Error('binderIndex must be less than values length');
+        }
+
+        function normalizeValues(values: string[] | string[][]): string[][] {
+            if (Array.isArray(values[0])) return values as string[][];
+
+            return [ values ] as string[][];
+        }
+
+        function pack(requestItems: (Nullable<BatchRequestItem>)[]): BatchRequestCallback[] {
+            const requests = requestItems.filter(request => request !== null) as BatchRequestItem[];
+            const packages: BatchRequestCallback[] = [];
+
+            for (let i = 0; i < l; i += BATCH_REQUEST_SIZE) {
+                const requestOptions: BatchRequestOptions = {
+                    method: 'POST',
+                    url: batchEndpoint,
+                    headers: opt.batchRequestHeaders
+                };
+                
+                const block = requests.slice(i, Math.min(i + BATCH_REQUEST_SIZE, l));
+
+                requestOptions.data = {
+                    requests: block
+                };
+
+                packages.push(async () => {
+                    const options = {
+                        ...requestOptions,
+                        headers: {
+                            ...requestOptions.headers,
+                            'Authorization': `Bearer ${await getAccessToken()}`
+                        }
+                    };
+
+                    let response: BatchResponse;
+                    try {
+                        response = await request<BatchResponse>(options);
+                    } catch (err) {
+                        return {
+                            responses: [],
+                            isSuccessful: false,
+                            rejectedIds: block.map(item => item.id)
+                        }
+                    }
+
+                    return {
+                        responses: response.responses,
+                        isSuccessful: true,
+                        rejectedIds: []
+                    };
+                });
+            }
+
+            return packages;
+        }
+
+        function unpack(responses: BatchResponse[]): BatchResult {
+            const result: BatchResult = {
+                resolved: [],
+                rejected: []
+            };
+
+            for (const response of responses) {
+                if (!response.isSuccessful) {
+                    result.rejected.push(...response.rejectedIds);
+                    continue;
+                }
+
+                for (const item of response.responses) {
+                    const isSuccessful = item.status >= 200 && item.status <= 299;
+
+                    if (isSuccessful) {
+                        result.resolved.push(item);
+                    } else {
+                        result.rejected.push(item.id);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        function rebind(resources: string[]): BatchRequestItem[] {
+            return resources.map(resource => ({
+                url: urls[resource],
+                method: opt.method as Method,
+                headers: opt.headers,
+                body: opt.body,
+                id: resource
+            }));
+        }
     }
 
     async function request<T>(options: AxiosRequestConfig<Response>, keyMapper?: Nullable<KeyMapper>): Promise<T> {
@@ -255,8 +489,8 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
         if (_options.logger !== undefined) await _options.logger(message);
     }
 
-    function checkResource(resource: string) {
-        if (!resource || resource.trim() === '') throw new Error('Resource cannot be empty');
+    function checkResource(resource: string, variableName?: string) {
+        if (!resource || resource.trim() === '') throw new Error(`${variableName ?? 'resource'} cannot be empty`);
     }
 
     return {

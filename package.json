@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "axios": "^0.26.1",
+    "callback-chunk": "^0.1.2",
     "fill-object": "^0.1.1",
     "is-absolute-url": "^4.0.1"
   },

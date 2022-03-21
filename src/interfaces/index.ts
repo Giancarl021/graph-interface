@@ -10,6 +10,8 @@ import Credentials from './options/Credentials';
 import UnitOptions from './options/UnitOptions';
 import TokenOptions from './options/TokenOptions';
 import ListOptions from './options/ListOptions';
+import MassiveOptions from './options/MassiveOptions';
+import PartialMassiveOptions from './options/PartialMassiveOptions';
 
 export {
     CacheService,
@@ -23,5 +25,7 @@ export {
     GraphOptions,
     TokenOptions,
     UnitOptions,
-    ListOptions
+    ListOptions,
+    MassiveOptions,
+    PartialMassiveOptions
 };

@@ -1,4 +1,5 @@
 import { KeyMapper, GraphOptions, UnitOptions, ListOptions, RequestOptions } from '../interfaces';
+import MassiveOptions from '../interfaces/options/MassiveOptions';
 import MemoryCache from '../services/memory-cache';
 
 interface Constants {
@@ -6,6 +7,7 @@ interface Constants {
         main: GraphOptions;
         unit: UnitOptions;
         list: ListOptions;
+        massive: MassiveOptions;
     },
     keyMappers: {
         accessToken: KeyMapper;
@@ -34,6 +36,16 @@ const constants: Constants = {
             ...requestOptions,
             limit: undefined,
             offset: undefined
+        },
+        massive: {
+            ...requestOptions,
+            headers: null,
+            batchRequestHeaders: {},
+            attempts: 3,
+            requestsPerAttempt: 50,
+            binderIndex: 0,
+            nullifyErrors: false,
+            values: null
         }
     },
     keyMappers: {
