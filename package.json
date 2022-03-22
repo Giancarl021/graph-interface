@@ -2,11 +2,12 @@
   "name": "graph-interface",
   "version": "0.1.12",
   "description": "An package with the focus on making easy the first contact with MS Graph API",
-  "main": "index.ts",
+  "main": "lib/index.js",
   "repository": "https://github.com/Giancarl021/graph-interface.git",
   "author": "Giancarlo Fontela da Luz <gian.f.luz@hotmail.com>",
   "license": "MIT",
   "private": false,
+  "files": [ "lib/**/*" ],
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "yarn build"
