@@ -368,17 +368,11 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
                 };
 
                 packages.push(async () => {
-                    const options = {
-                        ...requestOptions,
-                        headers: {
-                            ...requestOptions.headers,
-                            'Authorization': `Bearer ${await getAccessToken()}`
-                        }
-                    };
+                    requestOptions.headers['Authorization'] = `Bearer ${await getAccessToken()}`;
 
                     let response: BatchResponse;
                     try {
-                        response = await request<BatchResponse>(options);
+                        response = await request<BatchResponse>(requestOptions);
                     } catch (err) {
                         return {
                             responses: [],
