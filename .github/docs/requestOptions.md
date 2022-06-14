@@ -35,7 +35,7 @@ type Nullable<T> = T | null;
 
 * **method** - The HTTP method to use for the request. Default `GET`;
 
-* **headers** - Custom headers to be added on the request. Default `{}`. _Importante: The Access Token will be automatically put in the headers, so it is not necessary to put it manually_;
+* **headers** - Custom headers to be added on the request. Default `{}`. *Important: The Access Token will be automatically put in the headers, so it is not necessary to put it manually*;
 
 * **body** - The body of the request. Default `null`;
 

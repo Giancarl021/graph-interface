@@ -32,7 +32,7 @@ CommonJS:
 const GraphInterface = require('graph-interface');
 ```
 
-ESM:
+ES Modules:
 ```javascript
 import GraphInterface from 'graph-interface';
 ```

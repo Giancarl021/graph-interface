@@ -36,8 +36,10 @@ interface UnitOptions extends RequestOptions { }
 
 ### (TypeScript) `T`
 
-The type of the resource returned by the Graph API. To allow property renaming, you can use the [`keyMapper`](keyMapper.md) property in the `options` parameter.
+The type of the resource returned by the Graph API.
 
 ## Returns
 
 A `Promise` that resolves into the response body of the request.
+
+To allow property renaming, you can use the [`keyMapper`](keyMapper.md) property in the `options` parameter.
