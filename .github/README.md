@@ -1,5 +1,7 @@
 # graph-interface
 
+![graph-interface logo](docs/assets/icon.png)
+
 Simple Microsoft [Graph API](https://docs.microsoft.com/en-us/graph/api/overview) client.
 
 > **Important:** This version have breaking changes and is not compatible with the previous version.
