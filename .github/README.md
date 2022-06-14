@@ -1,172 +1,131 @@
 # graph-interface
 
-**v1.0 WIP**
+Simple Microsoft [Graph API](https://docs.microsoft.com/en-us/graph/api/overview) client.
 
-A module to simplify the [Microsoft Graph API](https://docs.microsoft.com/en-us/graph/overview) requests on tenants.
+> **Important:** This version have breaking changes and is not compatible with the previous version.
+## Similar projects
 
-[![Rate on Openbase](https://badges.openbase.io/js/rating/graph-interface.svg)](https://openbase.io/js/graph-interface?utm_source=embedded&utm_medium=badge&utm_campaign=rate-badge)
+* [Microsoft Graph JavaScript Client Library](https://www.npmjs.com/package/@microsoft/microsoft-graph-client) - The official JS/TS client;
+
+* [GraphInterface](https://www.nuget.org/packages/GraphInterface) - The .NET version of this package.
+
+## Why?
+
+As you may noticed, there is already an [official package](https://www.npmjs.com/package/@microsoft/microsoft-graph-client) to deal with the Graph API requests, and it's very well done. It have all the abstractions and provides a nice API to work with.
+
+However, some things are not available in the official package, like the ability to make massive requests and a simplified way to authenticate with the API.
+
+In general, I would say that you probably should use the official package, but if you really need to make massive requests, you can use this package.
 
 ## Installation
 
-Run
-```bash
-npm install graph-interface --save
-```
-or, if you use Yarn
-```bash
-yarn add graph-interface
-```
-
-## Configuration
-
-Import the module:
-```javascript
-const createGraphInterface = require('graph-interface');
-```
-To instantiate the client you must have the tenant credentials to call the Graph API:
-```javascript
-const credentials = {
-	tenantId: '...',
-	clientId: '...',
-	clientSecret: '...'
-};
-```
-You can pass some options too:
-```javascript
-const options = {
-    version: 'v1.0', // v1.0 or beta
-    authenticationProvider: null, // Function used to retrieve the access token, if null the default application token function is used. It is required for delegated authentication.
-    suppressWarnings: false, // Will not print the warnings when requesting unit or list
-    cache: {
-        type: null, // null | 'fs' | 'redis'
-        tokenCache: true, // Use token cache or not
-        fs: {
-            cleanupInterval: 3600, // Interval to Garbage Collection of caches
-            path: '.gphcache', // The folder where the cache data will be stored
-        },
-        redis: { // Same values you will use in a redis.createClient
-            host: '127.0.0.1',
-            port: 6379,
-            family: 'IPv4',
-            db: null,
-            password: null,
-            url: null,
-            path: null
-        }
-    }
-};
-```
-
-The option ``authenticationProvider`` is **required** for delegated access. Exemples can be founded here:
-
-* [Desktop Provider](https://www.npmjs.com/package/graph-interface-desktop-provider)
-
-The creation of client is asynchronous:
-```javascript
-const graph = await createGraphInterface(credentials, options);
-```
+You can get this package on [NPM](https://www.npmjs.com/package/graph-interface)
 
 ## Usage
 
-The client have 5 methods, all asynchronous:
+### Importing
 
-#### getToken
-
-Parameters:
-
+CommonJS:
 ```javascript
-const options = {
-    saveOn: null // Path to filename with the result of the request
-};
-```
-Call:
-```javascript
-const token = await graph.getToken(options);
-```
-The return will be the [Bearer Token](https://docs.microsoft.com/en-us/graph/auth/) to use all the methods in the client.
-* You do not need to call this method to use the others, you must use just when you need the token.
-
-#### unit
-Parameters:
-
-```javascript
-const url = 'users/{user-id}';
-const options = {
-    saveOn: null, // Path to filename with the result of the request
-    method: 'GET', // The method of the request
-    body: null, // The body of the request, can be JSON or an Object
-    headers: null, // Custom headers of the request, can be JSON or an Object
-    cache: {
-        expiresIn: null // The Time To Live (TTL) in seconds of the response if you configured an cache on the global options
-    },
-    fields: [] // An array with the fields of the response you want to return (can be combined with the $select oData attribute). Can convert the field name with the keyword "<original field name> as <new name>".
-};
-```
-Call:
-```javascript
-const unit = await graph.unit(url, options);
+const GraphInterface = require('graph-interface');
 ```
 
-#### list
-
-Parameters:
+ESM:
 ```javascript
-const url = 'users';
-const options = {
-    saveOn: null, // Path to filename with the result of the request
-    method: 'GET', // The method of the request
-    body: null, // The body of the request, can be JSON or an Object
-    headers: null, // Custom headers of the request, can be JSON or an Object
-    cache: {
-        expiresIn: null // The Time To Live (TTL) in seconds of the response if you configured an cache on the global options
-    },
-    map: null, // Predicate to execute an map on the response
-    filter: null, // Predicate to execute an filter on the response
-    reduce: null, // Predicate to execute an reduce on the response
-    limit: null, // The number of maximum of pages to request
-    offset: null // The index of the first page to get response (the module will request the previous pages until get the index of the offset)
-};
-```
-Call:
-```javascript
-const list = await graph.list(url, options);
+import GraphInterface from 'graph-interface';
 ```
 
-#### massive
-Parameters:
+### Initialization
+
+The imported `GraphInterface` function is used to create a new instance of the client. It requires the credentials and accepts additional options to change the behavior of the client:
+
 ```javascript
-const urlPattern = 'users/{id}/licenseDetails';
-const values = {
-	id: ['...', '...', '...'] // Each key in this object will be replaced in the urlPattern. All keys should have the same length
+const graph = GraphInterface(credentials, options);
+```
+The credentials object requires the following properties:
+
+```typescript
+interface Credentials {
+    tenantId: string;
+    clientId: string;
+    clientSecret: string;
 }
-const options = {
-    saveOn: null, // Path to filename with the result of the request
-    method: 'GET', // The method of the request
-    body: null, // The body of the request, can be JSON or an Object. Will replicate to all requests
-    headers: null, // Custom headers of the request, can be JSON or an Object
-    cache: {
-        expiresIn: null // The Time To Live (TTL) in seconds of the response if you configured an cache on the global options
-    },
-    binder: null, // [REQUIRED] The key in the values object that will be the key in the response object
-    cycle: {
-    	async: true, // Defines if the requests will be made in parallelism or linearly
-    	attempts: 3, // The maximum of attempts to the same quantity of errors
-    	requests: 50 // The number of requests made in the same cycle on asynchronous mode
-	},
-    type: null // [REQUIRED] 'unit' | 'list'
-};
-```
-Call:
-```javascript
-const massive = await graph.massive(urlPattern, values, options);
 ```
 
-#### close
+* **tenantId** - The ID of the Tenant where the application is registered;
+* **clientId** - The ID of the application itself registered in the Tenant;
+* **clientSecret** - The secret of the application, generated by the developer in the application settings.
 
-Close all connections with external resources.
+As an optional parameter, the `options` object have the following properties:
 
-Call:
+> **Note:** The options properties are all optional, as the following interface will be wrapped in a `Partial<T>` type.
 
-```javascript
-await graph.close();
+```typescript
+interface GraphOptions {
+    version: string;
+    logger?: Logger;
+    authenticationProvider?: AuthenticationProvider;
+    cacheService?: CacheService;
+    cacheAccessTokenByDefault: boolean;
+}
 ```
+
+* **version** - The version of the Graph API to use. Default `v1.0`;
+
+* **logger** - An `Logger` function to log the internal processing of requests in the package. Default `undefined`;
+
+* **authenticationProvider** - An `AuthenticationProvider` function, that will be called to get the access token. If not provided, the client will use the default `getAccessToken` behavior;
+
+* **cacheService** - An `CacheService` object to use to cache access tokens and responses if needed. Default `MemoryCache()`;
+
+* **cacheAccessTokenByDefault** - If `true`, the client will cache the access token by default. If `cacheService` is set to `null`, this option will be ignored. Default `true`.
+
+**Option types and interfaces:**
+
+`Logger` type:
+
+```typescript
+type Logger = (message: string) => void | Promise<void>;
+```
+
+`AuthenticationProvider` interfaces:
+
+```typescript
+type AuthenticationProvider = (credentials: Credentials) => Promise<AccessTokenResponse> | AccessTokenResponse;
+
+interface AccessTokenResponse {
+    accessToken: string;
+    expiresIn: number;
+    tokenType: string;
+    refreshToken?: string;
+    extExpiresIn: number;
+    expiresOn?: number;
+    notBefore?: Date;
+    resource?: string;
+}
+```
+
+`CacheService` interfaces:
+
+```typescript
+interface CacheService {
+    get: CacheGet;
+    set: CacheSet;
+    expire: CacheExpire;
+    has: CacheHas;
+}
+
+type CacheGet = <T>(key: string) => Promise<T>;
+type CacheSet = <T>(key: string, value: T, expiration?: number) => Promise<void>;
+type CacheExpire = (key: string) => Promise<void>;
+type CacheHas = (key: string) => Promise<boolean>;
+```
+## Methods
+
+* [getAccessToken](docs/getAccessToken.md) - Get the access token to use the Graph API, used most internally, but if need for a custom request, you can get it from here;
+
+* [unit](docs/unit.md) - Makes requests that return a single entity;
+
+* [list](docs/list.md) - Makes requests that return a list of entities, paginated using the `@odata.nextLink` property;
+
+* [massive](docs/massive.md) - Makes batch requests based on a template URL and a list of values to interpolate, generating a lot of similar requests.

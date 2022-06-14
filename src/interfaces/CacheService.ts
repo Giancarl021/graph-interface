@@ -1,5 +1,3 @@
-import Nullable from './util/Nullable';
-
 type CacheGet = <T>(key: string) => Promise<T>;
 type CacheSet = <T>(key: string, value: T, expiration?: number) => Promise<void>;
 type CacheExpire = (key: string) => Promise<void>;
