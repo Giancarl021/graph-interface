@@ -1,6 +1,6 @@
 {
   "name": "graph-interface",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An package with the focus on making easy the first contact with MS Graph API",
   "main": "lib/index.js",
   "repository": "https://github.com/Giancarl021/graph-interface.git",
