@@ -3,6 +3,7 @@ import Logger from './Logger';
 import AuthenticationProvider from './AuthenticationProvider';
 import AccessTokenResponse from './AccessTokenResponse';
 import KeyMapper from './KeyMapper';
+import MassiveResult from './MassiveResult';
 import RequestOptions from './options/RequestOptions';
 import HttpHeaders from './HttpHeaders';
 import GraphOptions from './options/GraphOptions';
@@ -27,5 +28,6 @@ export {
     UnitOptions,
     ListOptions,
     MassiveOptions,
-    PartialMassiveOptions
+    PartialMassiveOptions,
+    MassiveResult
 };
