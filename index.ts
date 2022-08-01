@@ -1,4 +1,4 @@
-import { CacheService, AccessTokenResponse, KeyMapper, HttpHeaders, Credentials, GraphOptions, TokenOptions, UnitOptions, ListOptions, MassiveOptions, PartialMassiveOptions } from './src/interfaces';
+import { CacheService, AccessTokenResponse, KeyMapper, HttpHeaders, Credentials, GraphOptions, TokenOptions, UnitOptions, ListOptions, MassiveOptions, PartialMassiveOptions, MassiveResult } from './src/interfaces';
 import Nullable from './src/interfaces/util/Nullable';
 import axios, { AxiosResponse, AxiosError, Method, AxiosRequestConfig } from 'axios';
 import fill from 'fill-object';
@@ -20,10 +20,6 @@ interface ListResponse<T> {
     '@odata.context': string;
     '@odata.nextLink'?: string;
     value: T[];
-}
-
-interface MassiveResult<T> {
-    [binder: string]: Nullable<T>;
 }
 
 interface IdentifiableUrls {
