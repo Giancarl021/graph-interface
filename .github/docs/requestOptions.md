@@ -10,7 +10,7 @@ This interface is defined as the following:
 interface RequestOptions {
     useCache: boolean;
     method: string;
-    headers: HttpHeaders
+    headers: HttpHeaders;
     body: any;
     keyMapper: Nullable<KeyMapper>;
 }
@@ -31,12 +31,12 @@ interface KeyMapperItem {
 type Nullable<T> = T | null;
 ```
 
-* **useCache** - If `true`, the client will use the `CacheService` to cache the response. Default `false`;
+-   **useCache** - If `true`, the client will use the `CacheService` to cache the response. Default `false`;
 
-* **method** - The HTTP method to use for the request. Default `GET`;
+-   **method** - The HTTP method to use for the request. Default `GET`;
 
-* **headers** - Custom headers to be added on the request. Default `{}`. *Important: The Access Token will be automatically put in the headers, so it is not necessary to put it manually*;
+-   **headers** - Custom headers to be added on the request. Default `{}`. _Important: The Access Token will be automatically put in the headers, so it is not necessary to put it manually_;
 
-* **body** - The body of the request. Default `null`;
+-   **body** - The body of the request. Default `null`;
 
-* **keyMapper** - A [`keyMapper`](keyMapper.md) object to allows property renaming on the response body. Default `null`.
+-   **keyMapper** - A [`keyMapper`](keyMapper.md) object to allows property renaming on the response body. Default `null`.

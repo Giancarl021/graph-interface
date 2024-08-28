@@ -9,22 +9,28 @@ interface MemoryCacheItems {
     [key: string]: MemoryCacheItem;
 }
 
-function MemoryCache(defaultExpirationTimeSpan?: number): Exclude<CacheService, null> {
+function MemoryCache(
+    defaultExpirationTimeSpan?: number
+): Exclude<CacheService, null> {
     const _defaultExpirationTimeSpan = defaultExpirationTimeSpan ?? 3600;
 
     const values: MemoryCacheItems = {};
 
     async function get<T>(key: string): Promise<T> {
-        if (!await has(key)) throw new Error('Cache item not found');
+        if (!(await has(key))) throw new Error('Cache item not found');
 
         const item = values[key];
 
         return item.value as T;
     }
 
-    async function set<T>(key: string, value: T, expiresIn?: number): Promise<void> {
+    async function set<T>(
+        key: string,
+        value: T,
+        expiresIn?: number
+    ): Promise<void> {
         expiresIn = expiresIn ?? _defaultExpirationTimeSpan;
-        
+
         const expiration = new Date(Date.now());
         expiration.setSeconds(expiration.getSeconds() + expiresIn);
 

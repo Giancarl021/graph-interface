@@ -17,6 +17,6 @@ interface KeyMapperItem {
 }
 ```
 
-* **originalName** - The name of the property on the response body that should be renamed.
+-   **originalName** - The name of the property on the response body that should be renamed.
 
-* **`originalName` value** - A string with a new name for the property, or, for nested properties, an object with the new name of the property and another `KeyMapper` as a value.
+-   **`originalName` value** - A string with a new name for the property, or, for nested properties, an object with the new name of the property and another `KeyMapper` as a value.

@@ -9,7 +9,7 @@ export default function (pattern: string, values: string[][]): string[] {
         const s = items.length;
 
         for (let j = 0; j < s; j++) {
-            if (formatParams[j] === undefined) formatParams.push([ items[j] ]);
+            if (formatParams[j] === undefined) formatParams.push([items[j]]);
             else formatParams[j].push(items[j]);
         }
     }

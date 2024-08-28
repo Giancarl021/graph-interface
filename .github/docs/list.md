@@ -39,9 +39,9 @@ interface ListOptions extends RequestOptions {
 }
 ```
 
-* **limit** - The maximum number of requests processed. Default is `undefined`;
+-   **limit** - The maximum number of requests processed. Default is `undefined`;
 
-* **offset** - The number of requests to skip from the beginning. Default is `undefined`.
+-   **offset** - The number of requests to skip from the beginning. Default is `undefined`.
 
 ### (TypeScript) `T`
 

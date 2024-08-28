@@ -5,7 +5,7 @@ import Nullable from '../util/Nullable';
 interface RequestOptions {
     useCache: boolean;
     method: string;
-    headers: HttpHeaders
+    headers: HttpHeaders;
     body: any;
     keyMapper: Nullable<KeyMapper>;
 }

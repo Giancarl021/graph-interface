@@ -13,6 +13,7 @@ const token = await graph.getAccessToken(options);
 ## Parameters
 
 ### (Optional) `options`
+
 Dictates the behavior of the method, allowing to decide if the response should be cached or not.
 
 Have the following interface:
@@ -25,7 +26,7 @@ interface TokenOptions {
 }
 ```
 
-* **useCache** - If `true`, the access token will be cached using the `CacheService` object initialized with the client. Default `true`.
+-   **useCache** - If `true`, the access token will be cached using the `CacheService` object initialized with the client. Default `true`.
 
 ## Returns
 

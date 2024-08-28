@@ -1,5 +1,9 @@
 type CacheGet = <T>(key: string) => Promise<T>;
-type CacheSet = <T>(key: string, value: T, expiration?: number) => Promise<void>;
+type CacheSet = <T>(
+    key: string,
+    value: T,
+    expiration?: number
+) => Promise<void>;
 type CacheExpire = (key: string) => Promise<void>;
 type CacheHas = (key: string) => Promise<boolean>;
 

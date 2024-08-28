@@ -1,6 +1,24 @@
-import { CacheService, AccessTokenResponse, KeyMapper, HttpHeaders, Credentials, GraphOptions, TokenOptions, UnitOptions, ListOptions, MassiveOptions, PartialMassiveOptions, MassiveResult } from './src/interfaces';
+import {
+    CacheService,
+    AccessTokenResponse,
+    KeyMapper,
+    HttpHeaders,
+    Credentials,
+    GraphOptions,
+    TokenOptions,
+    UnitOptions,
+    ListOptions,
+    MassiveOptions,
+    PartialMassiveOptions,
+    MassiveResult
+} from './src/interfaces';
 import Nullable from './src/interfaces/util/Nullable';
-import axios, { AxiosResponse, AxiosError, Method, AxiosRequestConfig } from 'axios';
+import axios, {
+    AxiosResponse,
+    AxiosError,
+    Method,
+    AxiosRequestConfig
+} from 'axios';
 import fill from 'fill-object';
 import chunk from 'callback-chunk';
 import isAbsoluteUrl from './src/lib/is-absolute-url';
@@ -35,9 +53,9 @@ interface BatchRequestItem {
 }
 
 interface BatchResponse {
-    responses: BatchResponseItem[]
+    responses: BatchResponseItem[];
     isSuccessful: boolean;
-    rejectedIds: string[]
+    rejectedIds: string[];
 }
 
 interface BatchResult {
@@ -52,11 +70,18 @@ interface BatchResponseItem {
     body: any;
 }
 
-type BatchRequestOptions = AxiosRequestConfig<Response> & Required<Pick<AxiosRequestConfig<Response>, 'headers' | 'url' | 'method'>>
+type BatchRequestOptions = AxiosRequestConfig<Response> &
+    Required<Pick<AxiosRequestConfig<Response>, 'headers' | 'url' | 'method'>>;
 type BatchRequestCallback = () => Promise<BatchResponse>;
 
-export = function GraphInterface(credentials: Credentials, options?: Partial<GraphOptions>) {
-    const _options = fill(options ?? {}, Constants.options.main) as GraphOptions;
+export = function GraphInterface(
+    credentials: Credentials,
+    options?: Partial<GraphOptions>
+) {
+    const _options = fill(
+        options ?? {},
+        Constants.options.main
+    ) as GraphOptions;
     const endpoint = `https://graph.microsoft.com/${_options.version}`;
     const batchEndpoint = `${endpoint}/$batch`;
 
@@ -64,19 +89,26 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
         _options.cacheAccessTokenByDefault = false;
     }
 
-    async function getAccessToken(options?: Partial<TokenOptions>): Promise<string> {
-        const opt = fill(options ?? {}, { useCache: _options.cacheAccessTokenByDefault }) as TokenOptions;
+    async function getAccessToken(
+        options?: Partial<TokenOptions>
+    ): Promise<string> {
+        const opt = fill(options ?? {}, {
+            useCache: _options.cacheAccessTokenByDefault
+        }) as TokenOptions;
 
         if (opt.useCache) {
             const cache = getCacheService();
             if (await cache.has(TOKEN_CACHE_KEY)) {
                 await log('Returning cached access token');
-                return (await cache.get<AccessTokenResponse>(TOKEN_CACHE_KEY)).accessToken;
+                return (await cache.get<AccessTokenResponse>(TOKEN_CACHE_KEY))
+                    .accessToken;
             }
         }
 
         if (_options.authenticationProvider !== undefined) {
-            await log('Retrieving access token from custom authentication provider');
+            await log(
+                'Retrieving access token from custom authentication provider'
+            );
 
             const token = await _options.authenticationProvider(credentials);
 
@@ -86,7 +118,9 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
                 await cache.set(TOKEN_CACHE_KEY, token, token.expiresIn);
             }
 
-            await log('Returning access token from custom authentication provider');
+            await log(
+                'Returning access token from custom authentication provider'
+            );
 
             return token.accessToken;
         }
@@ -107,7 +141,10 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
             })
         };
 
-        const token = await request<AccessTokenResponse>(requestOptions, Constants.keyMappers.accessToken);
+        const token = await request<AccessTokenResponse>(
+            requestOptions,
+            Constants.keyMappers.accessToken
+        );
 
         if (opt.useCache) {
             const cache = getCacheService();
@@ -120,7 +157,10 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
         return token.accessToken;
     }
 
-    async function unit<T>(resource: string, options?: Partial<UnitOptions>): Promise<T> {
+    async function unit<T>(
+        resource: string,
+        options?: Partial<UnitOptions>
+    ): Promise<T> {
         checkResource(resource);
 
         const opt = fill(options ?? {}, Constants.options.unit) as UnitOptions;
@@ -131,7 +171,7 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
 
             if (await cache.has(hash)) {
                 await log('Returning cached unit response');
-                return (await cache.get<T>(hash));
+                return await cache.get<T>(hash);
             }
         }
 
@@ -169,7 +209,10 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
         return result;
     }
 
-    async function list<T>(resource: string, options?: Partial<ListOptions>): Promise<T[]> {
+    async function list<T>(
+        resource: string,
+        options?: Partial<ListOptions>
+    ): Promise<T[]> {
         checkResource(resource);
 
         const opt = fill(options ?? {}, Constants.options.list) as ListOptions;
@@ -185,7 +228,7 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
 
             if (await cache.has(hash)) {
                 await log('Returning cached list response');
-                return (await cache.get<T[]>(hash));
+                return await cache.get<T[]>(hash);
             }
         }
 
@@ -199,7 +242,7 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
         const hasFinished = (index: number) => {
             if (!opt.limit) return false;
 
-            return ((index - offset) === (opt.limit ?? 0))
+            return index - offset === (opt.limit ?? 0);
         };
 
         do {
@@ -232,26 +275,33 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
         }
     }
 
-    async function massive<T>(resourcePattern: string, options: PartialMassiveOptions): Promise<MassiveResult<T>> {
+    async function massive<T>(
+        resourcePattern: string,
+        options: PartialMassiveOptions
+    ): Promise<MassiveResult<T>> {
         checkResource(resourcePattern, 'resourcePattern');
 
         const opt = fill(options, Constants.options.massive) as MassiveOptions;
 
         validadeOptions(opt);
 
-        const hash: string = opt.useCache ? hashRequest(resourcePattern, opt) : '';
+        const hash: string = opt.useCache
+            ? hashRequest(resourcePattern, opt)
+            : '';
 
         if (opt.useCache) {
             const cache = getCacheService();
 
             if (await cache.has(hash)) {
                 await log('Returning cached massive response');
-                return (await cache.get<{ [ binder: string ]: T }>(hash));
+                return await cache.get<{ [binder: string]: T }>(hash);
             }
         }
 
         await log('Generating individual urls');
-        const values = normalizeValues(opt.values as Exclude<typeof opt.values, null>);
+        const values = normalizeValues(
+            opt.values as Exclude<typeof opt.values, null>
+        );
         let resources = resourceBuilder(resourcePattern, values);
         let l = resources.length;
         const urls: IdentifiableUrls = {};
@@ -270,7 +320,7 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
             id: binderList[index]
         }));
 
-        requests.forEach(request => urls[request.id] = request.url);
+        requests.forEach(request => (urls[request.id] = request.url));
 
         do {
             await log('Packaging requests into Graph batch requests');
@@ -294,7 +344,8 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
             if (attempts >= opt.attempts) {
                 await log('Maximum attempts reached, nullifying errors');
 
-                if (!opt.nullifyErrors) throw new Error('Maximum attempts reached');
+                if (!opt.nullifyErrors)
+                    throw new Error('Maximum attempts reached');
 
                 for (const item of result.rejected) {
                     results[item] = null;
@@ -332,22 +383,30 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
                     continue;
                 }
 
-                if (size !== item.length) throw new Error('All values arrays must have the same length');
+                if (size !== item.length)
+                    throw new Error(
+                        'All values arrays must have the same length'
+                    );
             }
 
             if (size === 0) throw new Error('values arrays cannot be empty');
 
-            if (options.binderIndex >= options.values.length) throw new Error('binderIndex must be less than values length');
+            if (options.binderIndex >= options.values.length)
+                throw new Error('binderIndex must be less than values length');
         }
 
         function normalizeValues(values: string[] | string[][]): string[][] {
             if (Array.isArray(values[0])) return values as string[][];
 
-            return [ values ] as string[][];
+            return [values] as string[][];
         }
 
-        function pack(requestItems: (Nullable<BatchRequestItem>)[]): BatchRequestCallback[] {
-            const requests = requestItems.filter(request => request !== null) as BatchRequestItem[];
+        function pack(
+            requestItems: Nullable<BatchRequestItem>[]
+        ): BatchRequestCallback[] {
+            const requests = requestItems.filter(
+                request => request !== null
+            ) as BatchRequestItem[];
             const packages: BatchRequestCallback[] = [];
 
             for (let i = 0; i < l; i += BATCH_REQUEST_SIZE) {
@@ -356,15 +415,19 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
                     url: batchEndpoint,
                     headers: opt.batchRequestHeaders
                 };
-                
-                const block = requests.slice(i, Math.min(i + BATCH_REQUEST_SIZE, l));
+
+                const block = requests.slice(
+                    i,
+                    Math.min(i + BATCH_REQUEST_SIZE, l)
+                );
 
                 requestOptions.data = {
                     requests: block
                 };
 
                 packages.push(async () => {
-                    requestOptions.headers['Authorization'] = `Bearer ${await getAccessToken()}`;
+                    requestOptions.headers['Authorization'] =
+                        `Bearer ${await getAccessToken()}`;
 
                     let response: BatchResponse;
                     try {
@@ -374,7 +437,7 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
                             responses: [],
                             isSuccessful: false,
                             rejectedIds: block.map(item => item.id)
-                        }
+                        };
                     }
 
                     return {
@@ -401,7 +464,8 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
                 }
 
                 for (const item of response.responses) {
-                    const isSuccessful = item.status >= 200 && item.status <= 299;
+                    const isSuccessful =
+                        item.status >= 200 && item.status <= 299;
 
                     if (isSuccessful) {
                         result.resolved.push(item);
@@ -425,7 +489,10 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
         }
     }
 
-    async function request<T>(options: AxiosRequestConfig<Response>, keyMapper?: Nullable<KeyMapper>): Promise<T> {
+    async function request<T>(
+        options: AxiosRequestConfig<Response>,
+        keyMapper?: Nullable<KeyMapper>
+    ): Promise<T> {
         let response: AxiosResponse<Response>;
         try {
             response = await axios(options);
@@ -433,11 +500,15 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
             const err = _err as AxiosError;
 
             if (err.response?.data) {
-                throw new Error(`Failed to request access token: ${err.response.status} - ${err.response.statusText}\n${typeof err.response.data === 'object' ? JSON.stringify(err.response.data, null, 2) : err.response.data}`);
+                throw new Error(
+                    `Failed to request access token: ${err.response.status} - ${err.response.statusText}\n${typeof err.response.data === 'object' ? JSON.stringify(err.response.data, null, 2) : err.response.data}`
+                );
             }
 
             if (err.response) {
-                throw new Error(`Failed to request access token: ${err.response?.status} - ${err.response?.statusText}`);
+                throw new Error(
+                    `Failed to request access token: ${err.response?.status} - ${err.response?.statusText}`
+                );
             }
 
             throw new Error(`Failed to request access token: ${err.message}`);
@@ -445,7 +516,8 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
 
         if (!keyMapper) return response.data as T;
 
-        if (typeof response.data !== 'object') throw new Error('Response data is not an object');
+        if (typeof response.data !== 'object')
+            throw new Error('Response data is not an object');
 
         const result = map(response.data, keyMapper);
 
@@ -470,7 +542,8 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
     }
 
     function getCacheService(): CacheService {
-        if (_options.cacheService === undefined) throw new Error('Cache service is not defined');
+        if (_options.cacheService === undefined)
+            throw new Error('Cache service is not defined');
 
         return _options.cacheService;
     }
@@ -480,7 +553,8 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
     }
 
     function checkResource(resource: string, variableName?: string) {
-        if (!resource || resource.trim() === '') throw new Error(`${variableName ?? 'resource'} cannot be empty`);
+        if (!resource || resource.trim() === '')
+            throw new Error(`${variableName ?? 'resource'} cannot be empty`);
     }
 
     return {
@@ -489,4 +563,4 @@ export = function GraphInterface(credentials: Credentials, options?: Partial<Gra
         list,
         massive
     };
-}
+};

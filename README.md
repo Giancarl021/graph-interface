@@ -2,12 +2,13 @@
 
 Simple Microsoft [Graph API](https://docs.microsoft.com/en-us/graph/api/overview) client.
 
-> **Important:** This version have breaking changes and is not compatible with the previous version.
+> **Important:** Version 2 and forward will be ESM-only. If you need CommonJS support, please use version `1.x`, but keep in mind that theses versions will not get security updates.
+
 ## Similar projects
 
-* [Microsoft Graph JavaScript Client Library](https://www.npmjs.com/package/@microsoft/microsoft-graph-client) - The official JS/TS client;
+-   [Microsoft Graph JavaScript Client Library](https://www.npmjs.com/package/@microsoft/microsoft-graph-client) - The official JS/TS client;
 
-* [GraphInterface](https://www.nuget.org/packages/GraphInterface) - The .NET version of this package.
+-   [GraphInterface](https://www.nuget.org/packages/GraphInterface) - The .NET version of this package.
 
 ## Why?
 

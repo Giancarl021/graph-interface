@@ -1,12 +1,17 @@
 {
     "compilerOptions": {
-        "target": "es6",
-        "module": "commonjs",
-        "declaration": true,
-        "outDir": "lib",
+        "target": "ES2022",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "lib": ["ESNext"],
         "strict": true,
         "esModuleInterop": true,
+        "declaration": true,
+        "outDir": "lib",
+        "allowJs": true,
+        "noEmit": true,
+        "forceConsistentCasingInFileNames": true
     },
-    "include": ["index.ts", "interfaces.ts", "src/**/*.ts"],
-    "exclude": ["node_modules", "lib"]
+    "exclude": ["node_modules", "lib"],
+    "include": ["index.ts", "src/**/*.ts"]
 }

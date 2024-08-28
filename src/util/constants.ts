@@ -1,4 +1,10 @@
-import { KeyMapper, GraphOptions, UnitOptions, ListOptions, RequestOptions } from '../interfaces';
+import {
+    KeyMapper,
+    GraphOptions,
+    UnitOptions,
+    ListOptions,
+    RequestOptions
+} from '../interfaces';
 import MassiveOptions from '../interfaces/options/MassiveOptions';
 import MemoryCache from '../services/memory-cache';
 
@@ -8,10 +14,10 @@ interface Constants {
         unit: UnitOptions;
         list: ListOptions;
         massive: MassiveOptions;
-    },
+    };
     keyMappers: {
         accessToken: KeyMapper;
-    }
+    };
 }
 
 const requestOptions: RequestOptions = {
@@ -20,7 +26,7 @@ const requestOptions: RequestOptions = {
     headers: {},
     body: null,
     keyMapper: null
-}
+};
 
 const constants: Constants = {
     options: {

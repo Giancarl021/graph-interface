@@ -1,9 +1,5 @@
 # Develop environment files
-__ref/
 lib/
-!src/lib/
-test.ts
-test.js
 
 # Logs
 logs
