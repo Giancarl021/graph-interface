@@ -115,6 +115,16 @@ export default function GraphInterface(
         return token.accessToken;
     }
 
+    async function raw() {}
+
+    async function unit() {}
+
+    async function list() {}
+
+    async function massive() {}
+
+    function* createListAsyncIterator() {}
+
     function _assertCacheService() {
         if (!_options.cacheService)
             throw new Error(
@@ -141,9 +151,8 @@ export default function GraphInterface(
     }
 
     return {
-        getAccessToken,
-        
-    }
+        getAccessToken
+    };
 }
 
 export type {
