@@ -1,5 +1,5 @@
 import AuthenticationProvider from '../AuthenticationProvider';
-import CacheService from '../CacheService';
+import CacheService from '../GraphInterfaceCacheService';
 import Logger from '../Logger';
 
 interface GraphOptions {
