@@ -36,12 +36,15 @@ This parameter interface extends the [`RequestOptions`](requestOptions.md) inter
 interface ListOptions extends RequestOptions {
     limit?: number;
     offset?: number;
+    waitingTimeBetweenPages?: number;
 }
 ```
 
-* **limit** - The maximum number of requests processed. Default is `undefined`;
+- **limit** - The maximum number of requests processed. Default is `undefined`;
 
-* **offset** - The number of requests to skip from the beginning. Default is `undefined`.
+- **offset** - The number of requests to skip from the beginning. Default is `undefined`;
+
+- **waitingTimeBetweenPages** - The time in milliseconds between each page request. Useful when this method gives the `429 - Too Many Requests` error status code.
 
 ### (TypeScript) `T`
 

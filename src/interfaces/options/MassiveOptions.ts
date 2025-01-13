@@ -10,6 +10,7 @@ interface MassiveOptions extends Omit<RequestOptions, 'headers'> {
     attempts: number;
     requestsPerAttempt: number;
     nullifyErrors: boolean;
+    waitingTimeBetweenBatches?: number;
 }
 
 export default MassiveOptions;
