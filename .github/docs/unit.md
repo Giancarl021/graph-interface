@@ -31,7 +31,7 @@ Dictates the behavior of the unit request, such as headers, body, method and if 
 This parameter interface extends the [`RequestOptions`](requestOptions.md) interface.
 
 ```typescript
-interface UnitOptions extends RequestOptions { }
+interface UnitOptions extends RequestOptions {}
 ```
 
 ### (TypeScript) `T`

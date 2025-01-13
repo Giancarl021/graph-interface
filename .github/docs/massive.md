@@ -52,9 +52,7 @@ interface MassiveOptions extends Omit<RequestOptions, 'headers'> {
     waitingTimeBetweenBatches?: number;
 }
 
-interface HttpHeaders {
-    [header: string]: string;
-}
+type HttpHeaders = Record<string, string>;
 
 type Nullable<T> = T | null;
 

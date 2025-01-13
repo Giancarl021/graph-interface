@@ -1,5 +1,8 @@
-import RequestOptions from './RequestOptions';
+import type RequestOptions from './RequestOptions';
 
-interface UnitOptions extends RequestOptions { }
+/**
+ * Options for a unit request.
+ */
+interface UnitOptions extends RequestOptions {}
 
 export default UnitOptions;

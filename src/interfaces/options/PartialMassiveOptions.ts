@@ -1,6 +1,6 @@
-import RequestOptions from './RequestOptions';
-import MassiveOptions from './MassiveOptions';
-import WithOptional from '../util/WithOptional';
+import type RequestOptions from './RequestOptions';
+import type MassiveOptions from './MassiveOptions';
+import type WithOptional from '../util/WithOptional';
 
 type OptionalKeys = keyof RequestOptions | keyof Omit<MassiveOptions, 'values'>;
 

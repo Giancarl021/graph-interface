@@ -3,11 +3,12 @@
 Simple Microsoft [Graph API](https://docs.microsoft.com/en-us/graph/api/overview) client.
 
 > **Important:** This version have breaking changes and is not compatible with the previous version.
+
 ## Similar projects
 
-* [Microsoft Graph JavaScript Client Library](https://www.npmjs.com/package/@microsoft/microsoft-graph-client) - The official JS/TS client;
+- [Microsoft Graph JavaScript Client Library](https://www.npmjs.com/package/@microsoft/microsoft-graph-client) - The official JS/TS client;
 
-* [GraphInterface](https://www.nuget.org/packages/GraphInterface) - The .NET version of this package.
+- [GraphInterface](https://www.nuget.org/packages/GraphInterface) - The .NET version of this package.
 
 ## Why?
 

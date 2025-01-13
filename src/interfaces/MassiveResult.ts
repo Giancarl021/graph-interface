@@ -1,7 +1,5 @@
-import Nullable from './util/Nullable';
+import type Nullable from './util/Nullable';
 
-interface MassiveResult<T> {
-    [binder: string]: Nullable<T>;
-}
+type MassiveResult<T> = Record<string, Nullable<T>>;
 
 export default MassiveResult;

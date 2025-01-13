@@ -1,5 +1,11 @@
-import { Credentials, AccessTokenResponse } from '../interfaces';
+import type { Credentials, AccessTokenResponse } from '../interfaces';
 
-type AuthenticationProvider = (credentials: Credentials) => Promise<AccessTokenResponse> | AccessTokenResponse;
+/**
+ * Type for the authentication provider function, which is used to get the access token. It receives the credentials
+ * and returns the access token response
+ */
+type AuthenticationProvider = (
+    credentials: Credentials
+) => Promise<AccessTokenResponse> | AccessTokenResponse;
 
 export default AuthenticationProvider;

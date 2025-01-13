@@ -3,8 +3,10 @@ interface KeyMapperItem {
     value: KeyMapper;
 }
 
-interface KeyMapper {
-    [originalName: string]: KeyMapperItem | string;
-}
+/**
+ * Interface for the key mapper object, that
+ * maps the keys of an object to a new key
+ */
+type KeyMapper = Record<string, KeyMapperItem | string>;
 
 export default KeyMapper;

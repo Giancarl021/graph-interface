@@ -1,34 +1,41 @@
-import {
+import type {
     KeyMapper,
     GraphOptions,
     UnitOptions,
     ListOptions,
-    RequestOptions
+    RequestOptions,
+    ListGeneratorOptions
 } from '../interfaces';
-import MassiveOptions from '../interfaces/options/MassiveOptions';
-import MemoryCache from '../services/memory-cache';
+import type MassiveOptions from '../interfaces/options/MassiveOptions';
+import type RawOptions from '../interfaces/options/RawOptions';
 
-interface Constants {
-    options: {
-        main: GraphOptions;
-        unit: UnitOptions;
-        list: ListOptions;
-        massive: MassiveOptions;
-    };
-    keyMappers: {
-        accessToken: KeyMapper;
-    };
-}
+import MemoryCache from '../services/memory-cache';
 
 const requestOptions: RequestOptions = {
     useCache: false,
     method: 'GET',
     headers: {},
     body: null,
-    keyMapper: null
+    keyMapper: null,
+    customAccessToken: undefined
 };
 
-const constants: Constants = {
+const rawOptions: RawOptions = {
+    ...requestOptions
+};
+
+const listGeneratorOptions: ListGeneratorOptions = {
+    ...requestOptions,
+    limit: undefined,
+    offset: undefined,
+    waitingTimeBetweenPages: undefined,
+    startingFromToken: undefined
+};
+
+delete (rawOptions as any)['keyMapper'];
+delete (listGeneratorOptions as any)['useCache'];
+
+export default {
     options: {
         main: {
             version: 'v1.0',
@@ -36,14 +43,14 @@ const constants: Constants = {
             logger: undefined,
             cacheService: MemoryCache(),
             authenticationProvider: undefined
-        },
-        unit: requestOptions,
+        } as GraphOptions,
+        raw: rawOptions,
+        unit: requestOptions as UnitOptions,
         list: {
             ...requestOptions,
-            limit: undefined,
-            offset: undefined,
-            waitingTimeBetweenPages: undefined
-        },
+            ...listGeneratorOptions
+        } as ListOptions,
+        listGenerator: listGeneratorOptions,
         massive: {
             ...requestOptions,
             headers: null,
@@ -54,7 +61,7 @@ const constants: Constants = {
             nullifyErrors: false,
             values: null,
             waitingTimeBetweenBatches: undefined
-        }
+        } as MassiveOptions
     },
     keyMappers: {
         accessToken: {
@@ -66,8 +73,6 @@ const constants: Constants = {
             expires_on: 'expiresOn',
             not_before: 'notBefore',
             resource: 'resource'
-        }
+        } as KeyMapper
     }
-};
-
-export default constants;
+} as const;

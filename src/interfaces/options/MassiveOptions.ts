@@ -1,6 +1,6 @@
-import HttpHeaders from '../HttpHeaders';
-import Nullable from '../util/Nullable';
-import RequestOptions from './RequestOptions';
+import type HttpHeaders from '../HttpHeaders';
+import type Nullable from '../util/Nullable';
+import type RequestOptions from './RequestOptions';
 
 interface MassiveOptions extends Omit<RequestOptions, 'headers'> {
     headers: Nullable<HttpHeaders>;
