@@ -11,7 +11,7 @@ export function toUnitOptions(
     return {
         body: options.body,
         headers: options.headers,
-        keyMapper: options.keyMapper,
+        keyMapper: null,
         method: options.method,
         useCache: false
     };

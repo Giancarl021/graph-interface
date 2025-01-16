@@ -1,19 +1,27 @@
-# list
+# list generator
 
-This method allows you to paginate between a list of entities, like in [users](https://docs.microsoft.com/en-us/graph/api/user-list).
+This method allows you to paginate between a list of entities, like in [users](https://docs.microsoft.com/en-us/graph/api/user-list) using [Async Iterators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncIterator).
 
 ## Usage
 
 JavaScript:
 
 ```javascript
-const data = await graph.list(resource, options);
+const items = [];
+
+for await (const page of graph.createListGenerator(resource, options)) {
+    items.push(page.items);
+}
 ```
 
 TypeScript:
 
 ```typescript
-const data = await graph.list<T>(resource, options);
+const items: T[] = [];
+
+for await (const page of graph.createListGenerator<T>(resource, options)) {
+    items.push(page.items);
+}
 ```
 
 ## Parameters
@@ -26,18 +34,14 @@ This parameter is required, and will concatenate with the full endpoint in the G
 
 ### (Optional) `options`
 
-Dictates the behavior of the list request, such as headers, body, method, if the response should be cached and the limit and offset of the pagination.
+Dictates the behavior of the list request, such as headers, body, method and the limit and offset of the pagination.
 
-This parameter interface extends the [`RequestOptions`](requestOptions.md) interface.
+This parameter interface extends the [`ListOptions`](list.md) interface, removing only the cache capability.
 
 > **Note:** The options properties are all optional, as the following interface will be wrapped in a `Partial<T>` type.
 
 ```typescript
-interface ListOptions extends RequestOptions {
-    limit?: number;
-    offset?: number;
-    waitingTimeBetweenPages?: number;
-}
+interface ListGeneratorOptions extends Omit<ListOptions, 'useCache'> {}
 ```
 
 - **limit** - The maximum number of requests processed. Default is `undefined`;
@@ -76,10 +80,20 @@ When you set both `limit` and `offset`, the number of requests will be `limit + 
 
 ## Returns
 
-A `Promise` that resolves into a Array of entities of all pages defined to retrieve data.
+A `Promise` that resolves into a Array of `ListGeneratorPage` with entities of each page defined by the `T` type. The `ListGeneratorPage` interface is defined as follows:
 
-Some properties will be lost in the process of pagination, such as `@odata.context` and `@odata.nextLink`.
+```typescript
+interface ListGeneratorPage<T> {
+    items: T[];
+    pageTokens: {
+        current: Nullable<string>;
+        next: Nullable<string>;
+    };
+}
 
-This method will aggregate all pages into a single array.
+type Nullable<T> = T | null;
+```
 
-To allow property renaming, you can use the [`keyMapper`](keyMapper.md) property in the `options` parameter.
+Each page will have its entities stored in the `items` property, and the `pageTokens` property will have the `current` and `next` tokens, allowing you to paginate between the pages, with recovery if the request fails.
+
+To allow property renaming inside the items, you can use the [`keyMapper`](keyMapper.md) property in the `options` parameter.

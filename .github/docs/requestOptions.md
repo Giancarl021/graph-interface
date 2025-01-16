@@ -13,6 +13,7 @@ interface RequestOptions {
     headers: HttpHeaders;
     body: any;
     keyMapper: Nullable<KeyMapper>;
+    customAccessToken?: string;
 }
 
 type HttpHeaders = Record<string, string>;
@@ -36,3 +37,5 @@ type Nullable<T> = T | null;
 - **body** - The body of the request. Default `null`;
 
 - **keyMapper** - A [`keyMapper`](keyMapper.md) object to allows property renaming on the response body. Default `null`.
+
+- **customAccessToken** - A custom Access Token to be used in the request, bypassing the `AuthenticationProvider`. Default `undefined`.

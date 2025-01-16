@@ -20,6 +20,9 @@ importers:
                 specifier: ^4.0.1
                 version: 4.0.1
         devDependencies:
+            '@rollup/plugin-node-resolve':
+                specifier: ^16.0.0
+                version: 16.0.0(rollup@4.30.1)
             '@rollup/plugin-typescript':
                 specifier: ^12.1.2
                 version: 12.1.2(rollup@4.30.1)(tslib@2.8.1)(typescript@5.7.3)
@@ -66,6 +69,18 @@ packages:
                 integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==
             }
         engines: { node: '>= 8' }
+
+    '@rollup/plugin-node-resolve@16.0.0':
+        resolution:
+            {
+                integrity: sha512-0FPvAeVUT/zdWoO0jnb/V5BlBsUSNfkIOtFHzMO4H9MOklrmQFY6FduVHKucNb/aTFxvnGhj4MNj/T1oNdDfNg==
+            }
+        engines: { node: '>=14.0.0' }
+        peerDependencies:
+            rollup: ^2.78.0||^3.0.0||^4.0.0
+        peerDependenciesMeta:
+            rollup:
+                optional: true
 
     '@rollup/plugin-typescript@12.1.2':
         resolution:
@@ -271,6 +286,12 @@ packages:
                 integrity: sha512-F8Q+SeGimwOo86fiovQh8qiXfFEh2/ocYv7tU5pJ3EXMSSxk1Joj5wefpFK2fHTf/N6HKGSxIDBT9f3gCxXPkQ==
             }
 
+    '@types/resolve@1.20.2':
+        resolution:
+            {
+                integrity: sha512-60BCwRFOZCQhDncwQdxxeOEEkbc5dIMccYLwbxsS4TUNeVECQ/pBJ0j09mrHOl/JJvpRPGwO9SvE4nR2Nb/a4Q==
+            }
+
     aggregate-error@3.1.0:
         resolution:
             {
@@ -348,6 +369,13 @@ packages:
             {
                 integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==
             }
+
+    deepmerge@4.3.1:
+        resolution:
+            {
+                integrity: sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A==
+            }
+        engines: { node: '>=0.10.0' }
 
     del@5.1.0:
         resolution:
@@ -537,6 +565,12 @@ packages:
                 integrity: sha512-xelSayHH36ZgE7ZWhli7pW34hNbNl8Ojv5KVmkJD4hBdD3th8Tfk9vYasLM+mXWOZhFkgZfxhLSnrwRr4elSSg==
             }
         engines: { node: '>=0.10.0' }
+
+    is-module@1.0.0:
+        resolution:
+            {
+                integrity: sha512-51ypPSPCoTEIN9dy5Oy+h4pShgJmPCygKfyRCISBI+JoWT/2oJvK8QPxmwv7b/p239jXrm9M1mlQbyKJ5A152g==
+            }
 
     is-number@7.0.0:
         resolution:
@@ -766,6 +800,16 @@ snapshots:
             '@nodelib/fs.scandir': 2.1.5
             fastq: 1.18.0
 
+    '@rollup/plugin-node-resolve@16.0.0(rollup@4.30.1)':
+        dependencies:
+            '@rollup/pluginutils': 5.1.4(rollup@4.30.1)
+            '@types/resolve': 1.20.2
+            deepmerge: 4.3.1
+            is-module: 1.0.0
+            resolve: 1.22.10
+        optionalDependencies:
+            rollup: 4.30.1
+
     '@rollup/plugin-typescript@12.1.2(rollup@4.30.1)(tslib@2.8.1)(typescript@5.7.3)':
         dependencies:
             '@rollup/pluginutils': 5.1.4(rollup@4.30.1)
@@ -853,6 +897,8 @@ snapshots:
         dependencies:
             undici-types: 6.20.0
 
+    '@types/resolve@1.20.2': {}
+
     aggregate-error@3.1.0:
         dependencies:
             clean-stack: 2.2.0
@@ -892,6 +938,8 @@ snapshots:
             delayed-stream: 1.0.0
 
     concat-map@0.0.1: {}
+
+    deepmerge@4.3.1: {}
 
     del@5.1.0:
         dependencies:
@@ -1001,6 +1049,8 @@ snapshots:
     is-glob@4.0.3:
         dependencies:
             is-extglob: 2.1.1
+
+    is-module@1.0.0: {}
 
     is-number@7.0.0: {}
 

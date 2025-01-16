@@ -299,17 +299,26 @@ export default function GraphInterface(
 
         let response: ListResponse<T>;
         let index = 0;
+        let loop: boolean = false;
         let nextUri: string = opt.startingFromToken
             ? resource.includes('?')
-                ? `${resource}&$skipToken=${opt.startingFromToken}`
-                : `${resource}?$skipToken=${opt.startingFromToken}`
+                ? `${resource}&$skiptoken=${opt.startingFromToken}`
+                : `${resource}?$skiptoken=${opt.startingFromToken}`
             : resource;
-        let loop: boolean = false;
+
         const hasFinished = (index: number) => {
             if (!opt.limit) return false;
 
             return index - offset === (opt.limit ?? 0);
         };
+
+        const parsePage = opt.keyMapper
+            ? (arr: T[]) =>
+                  arr.map(
+                      item =>
+                          _applyKeyMapper(item as Response, opt.keyMapper!) as T
+                  )
+            : (arr: T[]) => arr;
 
         const waiter = !opt.waitingTimeBetweenPages
             ? async () => {}
@@ -325,7 +334,7 @@ export default function GraphInterface(
         do {
             response = await unit<ListResponse<T>>(nextUri, unitOptions);
 
-            if (index >= offset) result.push(...response.value);
+            if (index >= offset) result.push(...parsePage(response.value));
 
             nextUri = response['@odata.nextLink'] ?? '';
             index++;
@@ -348,7 +357,7 @@ export default function GraphInterface(
     async function* createListGenerator<T>(
         resource: string,
         options?: Partial<ListGeneratorOptions>
-    ): AsyncIterator<ListGeneratorPage<T>> {
+    ): AsyncGenerator<ListGeneratorPage<T>> {
         _checkResource(resource);
 
         const opt = fill(
@@ -363,17 +372,26 @@ export default function GraphInterface(
 
         let response: ListResponse<T>;
         let index = 0;
+        let loop: boolean = false;
         let nextUri: string = opt.startingFromToken
             ? resource.includes('?')
-                ? `${resource}&$skipToken=${opt.startingFromToken}`
-                : `${resource}?$skipToken=${opt.startingFromToken}`
+                ? `${resource}&$skiptoken=${opt.startingFromToken}`
+                : `${resource}?$skiptoken=${opt.startingFromToken}`
             : resource;
-        let loop: boolean = false;
+
         const hasFinished = (index: number) => {
             if (!opt.limit) return false;
 
             return index - offset === (opt.limit ?? 0);
         };
+
+        const parsePage = opt.keyMapper
+            ? (arr: T[]) =>
+                  arr.map(
+                      item =>
+                          _applyKeyMapper(item as Response, opt.keyMapper!) as T
+                  )
+            : (arr: T[]) => arr;
 
         const waiter = !opt.waitingTimeBetweenPages
             ? async () => {}
@@ -391,10 +409,12 @@ export default function GraphInterface(
 
             if (index >= offset) {
                 yield {
-                    items: response.value,
+                    items: parsePage(response.value),
                     pageTokens: {
-                        current: nextUri,
-                        next: response['@odata.nextLink'] ?? null
+                        current: _extractNextPageToken(nextUri),
+                        next: _extractNextPageToken(
+                            response['@odata.nextLink'] ?? null
+                        )
                     }
                 };
             }
@@ -668,26 +688,29 @@ export default function GraphInterface(
         if (typeof response.data !== 'object')
             throw new Error('Response data is not an object');
 
-        const result = map(response.data, keyMapper);
+        const result = _applyKeyMapper(response.data, keyMapper);
 
         return result as T;
+    }
 
-        function map(object: Response, mapper: KeyMapper): Response {
-            const result: Response = {};
-            for (const key in mapper) {
-                const mapping = mapper[key];
+    function _applyKeyMapper(object: Response, mapper: KeyMapper): Response {
+        const result: Response = {};
+        for (const key in mapper) {
+            const mapping = mapper[key];
 
-                if (object.hasOwnProperty(key)) {
-                    if (typeof mapping === 'object') {
-                        result[mapping.name] = map(object[key], mapping.value);
-                    } else {
-                        result[mapping] = object[key];
-                    }
+            if (object.hasOwnProperty(key)) {
+                if (typeof mapping === 'object') {
+                    result[mapping.name] = _applyKeyMapper(
+                        object[key],
+                        mapping.value
+                    );
+                } else {
+                    result[mapping] = object[key];
                 }
             }
-
-            return result;
         }
+
+        return result;
     }
 
     function _getCacheService(): CacheService {
@@ -704,6 +727,13 @@ export default function GraphInterface(
     function _checkResource(resource: string, variableName?: string) {
         if (!resource || resource.trim() === '')
             throw new Error(`${variableName ?? 'resource'} cannot be empty`);
+    }
+
+    function _extractNextPageToken(url: Nullable<string>): Nullable<string> {
+        if (!url) return null;
+
+        const query = new URLSearchParams(url.split('?').pop());
+        return query.get('$skiptoken');
     }
 
     return {
@@ -732,5 +762,6 @@ export type {
     ListOptions,
     MassiveOptions,
     PartialMassiveOptions,
-    MassiveResult
+    MassiveResult,
+    ListGeneratorPage
 };
