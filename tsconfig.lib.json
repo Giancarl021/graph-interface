@@ -5,7 +5,6 @@
         "moduleResolution": "NodeNext",
         "lib": ["ESNext"],
         "strict": true,
-        "isolatedModules": true,
         "esModuleInterop": true,
         "declaration": true,
         "outDir": "lib",
@@ -13,5 +12,5 @@
         "forceConsistentCasingInFileNames": true
     },
     "exclude": ["node_modules", "lib"],
-    "include": ["index.ts", "tests/**/*.ts", "src/**/*.ts"]
+    "include": ["index.ts", "src/**/*.ts"]
 }

@@ -1,9 +1,5 @@
-# Develop environment files
-__ref/
-lib/
-!src/lib/
-test.ts
-test.js
+*.spec.ts
+*.dev.*
 
 # Logs
 logs
@@ -88,6 +84,7 @@ typings/
 # Nuxt.js build / generate output
 .nuxt
 dist
+lib
 
 # Gatsby files
 .cache/

@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+
+pnpm build
+pnpm test
+pnpm format
+git add .
