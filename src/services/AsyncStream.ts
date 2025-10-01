@@ -6,7 +6,7 @@
 type ItemType<T> = T extends Array<infer U> ? U : never;
 
 /**
- * The type of an instance returned by the `AsyncIteratorTools` function.
+ * The type of an instance returned by the `AsyncStream` function.
  * @typeParam T The type of items in the async generator.
  */
 interface AsyncStreamInstance<T = unknown> extends AsyncIterableIterator<T> {
