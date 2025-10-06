@@ -15,5 +15,14 @@ export default {
          * if a `Retry-After` header is not provided.
          */
         tooManyRequestsWaitTimeMs: 1000 // 1 second
+    },
+    /**
+     * Settings for batch requests
+     */
+    batch: {
+        /**
+         * Number of requests to be sent in each batch. Default is `20`.
+         */
+        requestsPerBatch: 20
     }
 } as const;

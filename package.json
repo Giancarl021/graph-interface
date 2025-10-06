@@ -26,6 +26,7 @@
         "@babel/plugin-transform-modules-commonjs": "^7.27.1",
         "@rollup/plugin-typescript": "^12.1.4",
         "@types/node": "^24.6.2",
+        "@types/string-template": "^1.0.7",
         "babel-jest": "^30.2.0",
         "cross-env": "^10.1.0",
         "husky": "^9.1.7",
@@ -43,6 +44,7 @@
         "glob": "^9.0.0"
     },
     "dependencies": {
-        "@giancarl021/async-stream": "^0.1.1"
+        "@giancarl021/async-stream": "^0.1.1",
+        "string-template": "^1.0.0"
     }
 }
