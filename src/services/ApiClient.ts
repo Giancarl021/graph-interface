@@ -332,13 +332,15 @@ export default function ApiClient(clientOptions: Options) {
             options.query
         );
         let pageIndex = 0;
+        let currentOptions: PaginateRequestOptions<TPage, TItem> = options;
         const skip = options.skip ?? 0;
         const hasFinished = _isLoopFinishedFactory(options.take);
+        const getOptions = options.getOptions ?? (options => options);
 
         const result: TItem[] = [];
 
         while (nextUrl && !hasFinished(pageIndex)) {
-            const page = await single<TPage>(nextUrl, options);
+            const page = await single<TPage>(nextUrl, currentOptions);
 
             if (!page) throw new FaultyPagePaginationError(pageIndex);
 
@@ -350,6 +352,7 @@ export default function ApiClient(clientOptions: Options) {
             }
 
             pageIndex++;
+            currentOptions = getOptions(currentOptions, page);
         }
 
         return result;
@@ -380,11 +383,13 @@ export default function ApiClient(clientOptions: Options) {
                 options.query
             );
             let pageIndex = 0;
+            let currentOptions: PaginateRequestOptions<TPage, TItem> = options;
             const skip = options.skip ?? 0;
             const hasFinished = _isLoopFinishedFactory(options.take);
+            const getOptions = options.getOptions ?? (options => options);
 
             while (nextUrl && !hasFinished(pageIndex)) {
-                const page = await single<TPage>(nextUrl, options);
+                const page = await single<TPage>(nextUrl, currentOptions);
 
                 if (!page) throw new FaultyPagePaginationError(pageIndex);
 
@@ -396,6 +401,7 @@ export default function ApiClient(clientOptions: Options) {
                 }
 
                 pageIndex++;
+                currentOptions = getOptions(currentOptions, page);
             }
         }
 

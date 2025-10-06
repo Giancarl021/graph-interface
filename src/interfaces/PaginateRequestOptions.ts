@@ -34,6 +34,18 @@ export default interface PaginateRequestOptions<TPage, TItem>
         currentUrl: string,
         responseBody: TPage
     ): string | undefined;
+    /**
+     * Optional function to modify the request options for the next page request.
+     * It receives the last options and the last response (if any) and must return the new options.
+     * This can be used when the pagination requires changing headers or other options between requests.
+     * @param lastOptions The options used for the last request
+     * @param lastResponse The response body of the last request, if any
+     * @returns The options to use for the next request
+     */
+    getOptions?(
+        lastOptions: PaginateRequestOptions<TPage, TItem>,
+        lastResponse?: TPage
+    ): PaginateRequestOptions<TPage, TItem>;
 }
 
 /**
@@ -42,5 +54,5 @@ export default interface PaginateRequestOptions<TPage, TItem>
  */
 export type BasePaginateRequestOptions = Omit<
     PaginateRequestOptions<unknown, unknown>,
-    'getItems' | 'getNextPageLink'
+    'getItems' | 'getNextPageLink' | 'getOptions'
 >;

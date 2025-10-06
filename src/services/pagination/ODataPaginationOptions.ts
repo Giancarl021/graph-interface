@@ -4,7 +4,7 @@ import type { BasePaginateRequestOptions } from '../../interfaces/PaginateReques
 /**
  * OData page response type
  */
-type TPage<TItem> = {
+interface TPage<TItem> {
     /**
      * The items in the page
      */
@@ -19,7 +19,7 @@ type TPage<TItem> = {
      * This property is ignored if `@odata.nextLink` is present.
      */
     nextLink?: string;
-};
+}
 
 /**
  * Create OData pagination options
@@ -28,8 +28,13 @@ type TPage<TItem> = {
  * @returns Paginate request options with OData-specific `getItems` and `getNextPageLink` implementations
  */
 export default function ODataPaginationOptions<TItem>(
-    options: BasePaginateRequestOptions
+    options: BasePaginateRequestOptions = {}
 ): PaginateRequestOptions<TPage<TItem>, TItem> {
+    /**
+     * Get the items from the page response
+     * @param page The page response
+     * @returns The items in the page
+     */
     function getItems(page: TPage<TItem>): TItem[] {
         return page.value;
     }
@@ -51,6 +56,7 @@ export default function ODataPaginationOptions<TItem>(
     return {
         ...options,
         getItems,
-        getNextPageLink
+        getNextPageLink,
+        getOptions: undefined
     };
 }
