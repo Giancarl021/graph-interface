@@ -1,12 +1,10 @@
 import AsyncStream from '@giancarl021/async-stream';
-import format from 'string-template';
 import TooManyRequestAttemptsError from '../errors/TooManyRequestAttemptsError.js';
 import ApiRequestFailedError from '../errors/ApiRequestFailedError.js';
 import ApiResponseDeserializationError from '../errors/ApiResponseDeserializationError.js';
 import PaginateRequestOptions from '../interfaces/PaginateRequestOptions.js';
 import FaultyPagePaginationError from '../errors/FaultyPagePaginationError.js';
 import InvalidResourceError from '../errors/InvalidResourceError.js';
-import InvalidOptionsError from '../errors/InvalidOptionsError.js';
 import getResponseBody from '../util/getResponseBody.js';
 import delay from '../util/delay.js';
 import constants from '../util/constants.js';
@@ -14,7 +12,6 @@ import constants from '../util/constants.js';
 import type ApiRequestOptions from '../interfaces/ApiRequestOptions.js';
 import type RawRequestOptions from '../interfaces/RawRequestOptions.js';
 import type SingleRequestOptions from '../interfaces/SingleRequestOptions.js';
-import type BatchRequestOptions from '../interfaces/BatchRequestOptions.js';
 
 /**
  * Client options
@@ -218,83 +215,6 @@ export default function ApiClient(clientOptions: Options) {
     }
 
     /**
-     * Parse a resource URL template with placeholders and an array of values to interpolate.
-     * @param template The resource URL template with placeholders in `{key}` format.
-     * @param values The array of values to interpolate in the template.
-     * @returns An array of resource URLs with the placeholders replaced by the corresponding values.
-     * @throws {InvalidResourceError} If the template is empty or falsy.
-     * @throws {InvalidOptionsError} If the values array is empty, has inconsistent keys, or contains null/undefined values.
-     */
-    function _parseBatchTemplate(
-        template: string,
-        values: BatchRequestOptions['values']
-    ): string[] {
-        if (!template || !template.trim()) {
-            throw new InvalidResourceError();
-        }
-
-        if (!values || !values.length) {
-            throw new InvalidOptionsError('Values array cannot be empty');
-        }
-
-        const keySet = new Set<string>(Object.keys(values[0]));
-
-        return values
-            .map((valueSet, index) => formatValueSet(valueSet, index, keySet))
-            .map(valueSet => format(template, valueSet));
-
-        /**
-         * Format a single value set, converting `Date` and `BigInt` to strings.
-         * Also validates that all keys are present and no value is null or undefined.
-         * @param valueSet The value set to format
-         * @param index The index of the value set in the original array (for error messages)
-         * @param keySet The set of expected keys (from the first value set)
-         * @returns The formatted value set with all values as strings
-         */
-        function formatValueSet(
-            valueSet: BatchRequestOptions['values'][number],
-            index: number,
-            keySet: Set<string>
-        ) {
-            const formattedSet: Record<string, string> = {};
-            const valuesKeySet = new Set(Object.keys(valueSet));
-
-            if (valuesKeySet.size !== keySet.size) {
-                const expectedKeys = Array.from(keySet).sort((a, b) =>
-                    a.localeCompare(b)
-                );
-                const foundKeys = Array.from(valuesKeySet).sort((a, b) =>
-                    a.localeCompare(b)
-                );
-
-                throw new InvalidOptionsError(
-                    `Inconsistent keys in values array. Expected keys: ${expectedKeys}. Found keys: ${foundKeys} at position ${index}`
-                );
-            }
-
-            for (const key in valueSet) {
-                const value = valueSet[key];
-
-                if (value === null || value === undefined) {
-                    throw new InvalidOptionsError(
-                        `A value cannot be null or undefined. Found it at position ${index} on key '${key}'`
-                    );
-                }
-
-                if (value instanceof Date) {
-                    formattedSet[key] = value.toISOString();
-                } else if (typeof value === 'bigint') {
-                    formattedSet[key] = value.toString();
-                } else {
-                    formattedSet[key] = String(value);
-                }
-            }
-
-            return formattedSet;
-        }
-    }
-
-    /**
      * Make a raw API request, returns the fetch Response object
      * @param resource The resource URL or path
      * @param options Request options
@@ -455,7 +375,7 @@ export default function ApiClient(clientOptions: Options) {
      */
     function createPageGenerator<TPage, TItem>(
         resource: string,
-        options: PaginateRequestOptions<TPage, TItem>
+        options: Omit<PaginateRequestOptions<TPage, TItem>, 'cache'>
     ): AsyncStream<TItem[]> {
         if (options.take === 0) {
             return AsyncStream.empty<TItem[]>();
@@ -468,7 +388,7 @@ export default function ApiClient(clientOptions: Options) {
                 options.query
             );
             let pageIndex = 0;
-            let currentOptions: PaginateRequestOptions<TPage, TItem> = options;
+            let currentOptions = options;
             const skip = options.skip ?? 0;
             const hasFinished = _isLoopFinishedFactory(options.take);
             const getOptions = options.getOptions ?? (options => options);
@@ -493,33 +413,112 @@ export default function ApiClient(clientOptions: Options) {
         return new AsyncStream(generator());
     }
 
-    async function batch<T = unknown>(
-        resourceTemplate: string,
-        options: BatchRequestOptions
-    ): Promise<Record<string, T>> {
-        const result: Record<string, T> = {};
+    // Graph API ONLY
 
-        const resources = _parseBatchTemplate(resourceTemplate, options.values);
+    /**
+     * Parse a resource URL template with placeholders and an array of values to interpolate.
+     * @param template The resource URL template with placeholders in `{key}` format.
+     * @param values The array of values to interpolate in the template.
+     * @returns An array of resource URLs with the placeholders replaced by the corresponding values.
+     * @throws {InvalidResourceError} If the template is empty or falsy.
+     * @throws {InvalidOptionsError} If the values array is empty, has inconsistent keys, or contains null/undefined values.
+     */
+    // function _parseBatchTemplate(
+    //     template: string,
+    //     values: BatchRequestOptions['values']
+    // ): string[] {
+    //     if (!template || !template.trim()) {
+    //         throw new InvalidResourceError();
+    //     }
 
-        const wait =
-            (options.waitTimeBetweenAttempts ?? 0) > 0
-                ? () => delay(options.waitTimeBetweenAttempts!)
-                : async () => {};
+    //     if (!values || !values.length) {
+    //         throw new InvalidOptionsError('Values array cannot be empty');
+    //     }
 
-        let attempts = 0;
+    //     const keySet = new Set<string>(Object.keys(values[0]));
 
-        return result;
-    }
+    //     return values
+    //         .map((valueSet, index) => formatValueSet(valueSet, index, keySet))
+    //         .map(valueSet => format(template, valueSet));
 
-    function createBatchPaginator<T = unknown>(): AsyncStream<
-        Record<string, T>
-    > {
-        async function* generator() {
-            yield {};
-        }
+    //     /**
+    //      * Format a single value set, converting `Date` and `BigInt` to strings.
+    //      * Also validates that all keys are present and no value is null or undefined.
+    //      * @param valueSet The value set to format
+    //      * @param index The index of the value set in the original array (for error messages)
+    //      * @param keySet The set of expected keys (from the first value set)
+    //      * @returns The formatted value set with all values as strings
+    //      */
+    //     function formatValueSet(
+    //         valueSet: BatchRequestOptions['values'][number],
+    //         index: number,
+    //         keySet: Set<string>
+    //     ) {
+    //         const formattedSet: Record<string, string> = {};
+    //         const valuesKeySet = new Set(Object.keys(valueSet));
 
-        return new AsyncStream(generator());
-    }
+    //         if (valuesKeySet.size !== keySet.size) {
+    //             const expectedKeys = Array.from(keySet).sort((a, b) =>
+    //                 a.localeCompare(b)
+    //             );
+    //             const foundKeys = Array.from(valuesKeySet).sort((a, b) =>
+    //                 a.localeCompare(b)
+    //             );
+
+    //             throw new InvalidOptionsError(
+    //                 `Inconsistent keys in values array. Expected keys: ${expectedKeys}. Found keys: ${foundKeys} at position ${index}`
+    //             );
+    //         }
+
+    //         for (const key in valueSet) {
+    //             const value = valueSet[key];
+
+    //             if (value === null || value === undefined) {
+    //                 throw new InvalidOptionsError(
+    //                     `A value cannot be null or undefined. Found it at position ${index} on key '${key}'`
+    //                 );
+    //             }
+
+    //             if (value instanceof Date) {
+    //                 formattedSet[key] = value.toISOString();
+    //             } else if (typeof value === 'bigint') {
+    //                 formattedSet[key] = value.toString();
+    //             } else {
+    //                 formattedSet[key] = String(value);
+    //             }
+    //         }
+
+    //         return formattedSet;
+    //     }
+    // }
+
+    // async function batch<T = unknown>(
+    //     resourceTemplate: string,
+    //     options: BatchRequestOptions
+    // ): Promise<Record<string, T>> {
+    //     const result: Record<string, T> = {};
+
+    //     const resources = _parseBatchTemplate(resourceTemplate, options.values);
+
+    //     const wait =
+    //         (options.waitTimeBetweenAttempts ?? 0) > 0
+    //             ? () => delay(options.waitTimeBetweenAttempts!)
+    //             : async () => {};
+
+    //     let attempts = 0;
+
+    //     return result;
+    // }
+
+    // function createBatchPaginator<T = unknown>(): AsyncStream<
+    //     Record<string, T>
+    // > {
+    //     async function* generator() {
+    //         yield {};
+    //     }
+
+    //     return new AsyncStream(generator());
+    // }
 
     return {
         /**
@@ -562,8 +561,6 @@ export default function ApiClient(clientOptions: Options) {
          * @throws {ApiResponseDeserializationError} If any response body cannot be deserialized to JSON
          * @throws {FaultyPagePaginationError} If a faulty page is encountered during pagination
          */
-        createPageGenerator,
-        batch,
-        createBatchPaginator
+        createPageGenerator
     };
 }

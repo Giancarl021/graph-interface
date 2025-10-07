@@ -17,9 +17,9 @@ export default {
         tooManyRequestsWaitTimeMs: 1000 // 1 second
     },
     /**
-     * Settings for batch requests
+     * Settings for batch requests for Graph API
      */
-    batch: {
+    graphBatch: {
         /**
          * Number of requests to be sent in each batch. Default is `20`.
          */
