@@ -375,7 +375,7 @@ export default function ApiClient(clientOptions: Options) {
      */
     function createPageGenerator<TPage, TItem>(
         resource: string,
-        options: Omit<PaginateRequestOptions<TPage, TItem>, 'cache'>
+        options: PaginateRequestOptions<TPage, TItem>
     ): AsyncStream<TItem[]> {
         if (options.take === 0) {
             return AsyncStream.empty<TItem[]>();

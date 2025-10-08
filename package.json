@@ -45,6 +45,7 @@
     },
     "dependencies": {
         "@giancarl021/async-stream": "^0.1.1",
+        "cross-sha256": "^1.2.0",
         "string-template": "^1.0.0"
     }
 }

@@ -4,7 +4,7 @@ import type CacheService from '../interfaces/CacheService.js';
 export default function NullCacheService(): CacheService {
     function _noOp() {}
 
-    function has(key: string) {
+    function has(_key: string) {
         return false;
     }
 
